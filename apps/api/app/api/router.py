@@ -3,10 +3,12 @@ from __future__ import annotations
 from fastapi import APIRouter
 
 from app.api.v1 import (
+    agents,
     analytics,
     auth,
     entities,
     graph,
+    imports,
     memory,
     profile,
     projects,
@@ -27,3 +29,5 @@ api_router.include_router(graph.router, prefix="/graph", tags=["graph"])
 api_router.include_router(timeline.router, prefix="", tags=["timeline"])
 api_router.include_router(reasoning.router, prefix="", tags=["reasoning"])
 api_router.include_router(entities.router, prefix="", tags=["entities"])
+api_router.include_router(imports.router, prefix="", tags=["imports"])
+api_router.include_router(agents.router, prefix="", tags=["agents"])

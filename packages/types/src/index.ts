@@ -440,3 +440,260 @@ export interface StreamReasonHookResult {
   trailId: string | null;
   explanation: Explanation | null;
 }
+
+export interface Source {
+  id: string;
+  project_id: string;
+  source_type: string;
+  display_name?: string;
+  url?: string;
+  file_path?: string;
+  mime_type?: string;
+  size_bytes?: number;
+  metadata?: Record<string, unknown>;
+  memory_count: number;
+  last_import_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SourceListResponse {
+  sources: Source[];
+  total: number;
+}
+
+export interface ImportJob {
+  id: string;
+  project_id: string;
+  source_id?: string;
+  source_type: string;
+  status: "queued" | "running" | "completed" | "failed" | "cancelled";
+  progress_pct: number;
+  current_step?: string;
+  error_message?: string;
+  total_items: number;
+  processed_items: number;
+  memory_ids?: string[];
+  metadata?: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ImportJobListResponse {
+  jobs: ImportJob[];
+  total: number;
+}
+
+export interface ImportRequest {
+  project_id: string;
+  source_type: string;
+  data?: string;
+  url?: string;
+  display_name?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface ImportResponse {
+  job_id: string;
+  source_id?: string;
+  status: string;
+  message: string;
+}
+
+export interface ImportProgressEvent {
+  job_id: string;
+  status: string;
+  progress_pct: number;
+  current_step?: string;
+  error_message?: string;
+  memory_id?: string;
+}
+
+export interface MemoryVersion {
+  id: string;
+  memory_id: string;
+  version_type: string;
+  content_preview?: string;
+  title?: string;
+  tags?: string[];
+  importance: number;
+  metadata?: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface Agent {
+  id: string;
+  project_id: string;
+  user_id: string;
+  name: string;
+  description?: string;
+  agent_type: string;
+  agent_config?: Record<string, unknown>;
+  capabilities?: string[];
+  memory_scope: string;
+  permissions?: Record<string, unknown>;
+  status: string;
+  metadata?: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AgentListResponse {
+  agents: Agent[];
+  total: number;
+}
+
+export interface AgentCreateRequest {
+  name: string;
+  description?: string;
+  agent_type?: string;
+  agent_config?: Record<string, unknown>;
+  capabilities?: string[];
+  memory_scope?: string;
+  permissions?: Record<string, unknown>;
+}
+
+export interface AgentUpdateRequest {
+  name?: string;
+  description?: string;
+  agent_type?: string;
+  agent_config?: Record<string, unknown>;
+  capabilities?: string[];
+  memory_scope?: string;
+  permissions?: Record<string, unknown>;
+  status?: string;
+}
+
+export interface Workflow {
+  id: string;
+  project_id: string;
+  agent_id: string;
+  name: string;
+  description?: string;
+  status: string;
+  workflow_type: string;
+  input_data?: Record<string, unknown>;
+  output_data?: Record<string, unknown>;
+  progress_pct: number;
+  current_step?: string;
+  error_message?: string;
+  started_at?: string;
+  completed_at?: string;
+  metadata?: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WorkflowListResponse {
+  workflows: Workflow[];
+  total: number;
+}
+
+export interface WorkflowCreateRequest {
+  agent_id: string;
+  name: string;
+  description?: string;
+  workflow_type?: string;
+  input_data?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
+}
+
+export interface WorkflowUpdateRequest {
+  status?: string;
+  output_data?: Record<string, unknown>;
+  progress_pct?: number;
+  current_step?: string;
+  error_message?: string;
+}
+
+export interface TaskExecution {
+  id: string;
+  project_id: string;
+  workflow_id?: string;
+  agent_id: string;
+  parent_task_id?: string;
+  name: string;
+  status: string;
+  input_data?: Record<string, unknown>;
+  output_data?: Record<string, unknown>;
+  started_at?: string;
+  completed_at?: string;
+  duration_ms?: number;
+  error_message?: string;
+  metadata?: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TaskExecutionListResponse {
+  tasks: TaskExecution[];
+  total: number;
+}
+
+export interface Decision {
+  id: string;
+  project_id: string;
+  agent_id: string;
+  workflow_id?: string;
+  task_id?: string;
+  decision_type: string;
+  input_context?: Record<string, unknown>;
+  reasoning?: string;
+  outcome?: Record<string, unknown>;
+  confidence?: number;
+  metadata?: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DecisionListResponse {
+  decisions: Decision[];
+  total: number;
+}
+
+export interface DecisionCreateRequest {
+  agent_id: string;
+  workflow_id?: string;
+  task_id?: string;
+  decision_type: string;
+  input_context?: Record<string, unknown>;
+  reasoning?: string;
+  outcome?: Record<string, unknown>;
+  confidence?: number;
+  metadata?: Record<string, unknown>;
+}
+
+export interface ObservabilityEvent {
+  id: string;
+  project_id: string;
+  agent_id?: string;
+  workflow_id?: string;
+  task_id?: string;
+  event_type: string;
+  event_name: string;
+  data?: Record<string, unknown>;
+  duration_ms?: number;
+  level: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ObservabilityEventListResponse {
+  events: ObservabilityEvent[];
+  total: number;
+}
+
+export interface HandoffRequest {
+  from_agent_id: string;
+  to_agent_id: string;
+  workflow_id: string;
+  context?: Record<string, unknown>;
+  message?: string;
+}
+
+export interface HandoffResponse {
+  handoff_id: string;
+  new_workflow_id: string;
+  status: string;
+  message: string;
+}

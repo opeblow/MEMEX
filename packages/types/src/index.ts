@@ -1,25 +1,11 @@
-// ──────────────────────────────────────
-// Memory Types
-// ──────────────────────────────────────
-
 export type MemoryType =
-  | "text"
-  | "file"
-  | "code"
-  | "image"
-  | "audio"
-  | "video"
-  | "url"
-  | "conversation"
-  | "meeting_note"
-  | "github_issue"
-  | "support_ticket"
-  | "research"
-  | "decision";
+  | "text" | "file" | "code" | "image" | "audio" | "video"
+  | "url" | "conversation" | "meeting_note" | "github_issue"
+  | "support_ticket" | "research" | "decision";
 
-export type MemoryStatus = "processing" | "indexed" | "failed" | "deleted";
+export type MemoryStatus = "processing" | "indexed" | "failed" | "deleted" | "archived";
 
-export type SourceTag = "session" | "graph" | "graph_context" | "trace";
+export type SourceTag = "session" | "graph" | "graph_context" | "trace" | "vector" | "timeline";
 
 export interface MemoryMetadata {
   title?: string;
@@ -49,20 +35,32 @@ export interface Memory {
   metadata: MemoryMetadata;
 }
 
-// ──────────────────────────────────────
-// Recall Types
-// ──────────────────────────────────────
+export interface MemoryDetail {
+  id: string;
+  project_id: string;
+  user_id: string;
+  session_id?: string;
+  title: string;
+  memory_type: string;
+  status: string;
+  source?: string;
+  source_url?: string;
+  file_path?: string;
+  mime_type?: string;
+  content_preview?: string;
+  size_bytes?: number;
+  token_count?: number;
+  chunk_count?: number;
+  importance: number;
+  tags: string[];
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
 
 export type QueryType =
-  | "graph_completion"
-  | "rag_completion"
-  | "hybrid_completion"
-  | "chunks"
-  | "summaries"
-  | "temporal"
-  | "cypher"
-  | "feeling_lucky"
-  | null;
+  | "graph_completion" | "rag_completion" | "hybrid_completion"
+  | "chunks" | "summaries" | "temporal" | "cypher" | "feeling_lucky" | null;
 
 export interface RecallRequest {
   query: string;
@@ -83,6 +81,7 @@ export interface RecallSource {
   chunkId?: string;
   relevanceScore: number;
   evidence?: string;
+  explanation?: string;
 }
 
 export interface RecallResponse {
@@ -90,10 +89,6 @@ export interface RecallResponse {
   sources: RecallSource[];
   processingTimeMs: number;
 }
-
-// ──────────────────────────────────────
-// Graph Types
-// ──────────────────────────────────────
 
 export interface GraphNode {
   id: string;
@@ -117,10 +112,6 @@ export interface GraphSnapshot {
   edges: GraphEdge[];
 }
 
-// ──────────────────────────────────────
-// Auth Types
-// ──────────────────────────────────────
-
 export interface User {
   id: string;
   email: string;
@@ -143,10 +134,6 @@ export interface ApiKey {
   isActive: boolean;
 }
 
-// ──────────────────────────────────────
-// Project Types
-// ──────────────────────────────────────
-
 export interface Project {
   id: string;
   workspaceId: string;
@@ -166,10 +153,6 @@ export interface Workspace {
   createdAt: string;
 }
 
-// ──────────────────────────────────────
-// Session Types
-// ──────────────────────────────────────
-
 export interface Session {
   id: string;
   projectId: string;
@@ -181,22 +164,40 @@ export interface Session {
   updatedAt: string;
 }
 
-// ──────────────────────────────────────
-// Phase 4 — Service Interfaces
-// ──────────────────────────────────────
-
-export interface ServiceProvider {
-  memory: MemoryService;
-  cognee: CogneeService;
-  knowledgeGraph: KnowledgeGraph;
-  memoryTimeline: MemoryTimeline;
-  ai: AIService;
+export interface TimelineEvent {
+  id: string;
+  project_id: string;
+  user_id: string;
+  event_type: string;
+  data: Record<string, unknown>;
+  created_at: string;
 }
 
-export interface MemoryService {
-  remember(input: RememberInput): Promise<RememberOutput>;
-  improve(projectId: string, sessionIds?: string[]): Promise<ImproveOutput>;
-  forget(projectId: string, dataId?: string): Promise<ForgetOutput>;
+export interface TimelineQuery {
+  projectId: string;
+  fromDate?: string;
+  toDate?: string;
+  eventTypes?: string[];
+  limit?: number;
+  offset?: number;
+}
+
+export interface TimelineResponse {
+  events: TimelineEvent[];
+  total: number;
+  summary: Record<string, unknown>;
+}
+
+export interface SearchRequest {
+  query: string;
+  projectId: string;
+  limit?: number;
+}
+
+export interface SearchResponse {
+  results: MemoryDetail[];
+  total: number;
+  processingTimeMs: number;
 }
 
 export interface RememberInput {
@@ -221,6 +222,9 @@ export interface RememberOutput {
 export interface ImproveOutput {
   projectId: string;
   status: string;
+  nodesEnriched: number;
+  edgesAdded: number;
+  summariesGenerated: number;
   processingTimeMs: number;
 }
 
@@ -229,6 +233,20 @@ export interface ForgetOutput {
   deletedDataIds: string[];
   deletedGraphNodes: number;
   deletedVectors: number;
+}
+
+export interface ServiceProvider {
+  memory: MemoryService;
+  cognee: CogneeService;
+  knowledgeGraph: KnowledgeGraph;
+  memoryTimeline: MemoryTimeline;
+  ai: AIService;
+}
+
+export interface MemoryService {
+  remember(input: RememberInput): Promise<RememberOutput>;
+  improve(projectId: string, sessionIds?: string[]): Promise<ImproveOutput>;
+  forget(projectId: string, dataId?: string): Promise<ForgetOutput>;
 }
 
 export interface CogneeService {
@@ -244,16 +262,8 @@ export interface KnowledgeGraph {
 }
 
 export interface MemoryTimeline {
-  getEvents(projectId: string, options?: { from?: string; to?: string; limit?: number }): Promise<TimelineEvent[]>;
+  getEvents(projectId: string, options?: TimelineQuery): Promise<TimelineEvent[]>;
   recordEvent(projectId: string, type: string, data?: Record<string, unknown>): Promise<string>;
-}
-
-export interface TimelineEvent {
-  id: string;
-  projectId: string;
-  eventType: string;
-  timestamp: string;
-  data?: Record<string, unknown>;
 }
 
 export interface AIService {

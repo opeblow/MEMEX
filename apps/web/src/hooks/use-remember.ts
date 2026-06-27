@@ -30,7 +30,7 @@ export function useRemember() {
       if (typeof params.data === "string") {
         formData.append("data", params.data);
       } else {
-        formData.append("data", params.data);
+        formData.append("file", params.data);
       }
 
       formData.append("project_id", params.projectId);

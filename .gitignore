@@ -1,0 +1,41 @@
+node_modules/
+.turbo/
+dist/
+.next/
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pyc
+__pycache__/
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.coverage
+coverage/
+*.log
+.DS_Store
+*.tsbuildinfo
+.next
+out/
+build/
+*.db
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+Thumbs.db
+Desktop.ini
+
+# Misc
+.ruff_cache/
+*.egg-info/
+.history/

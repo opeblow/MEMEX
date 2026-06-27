@@ -1,0 +1,4 @@
+{
+  "*.{ts,tsx}": ["biome check --write", "biome format --write"],
+  "*.{json,md,css}": ["biome format --write"]
+}

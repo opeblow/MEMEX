@@ -1,0 +1,17 @@
+[project]
+name = "memex-api"
+version = "1.0.0"
+description = "MEMEX API — The Operating System for Artificial Memory"
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

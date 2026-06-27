@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
-import { Search, Command } from "lucide-react";
+import { Search, Command, Brain } from "lucide-react";
 import { CommandPalette } from "@/components/search/command-palette";
 import { useMemories, useDeleteMemory, useArchiveMemory } from "@/hooks/use-memory";
 import { useTimeline } from "@/hooks/use-timeline";
 import type { MemoryDetail, TimelineEvent } from "@memex/types";
 import { useUIStore } from "@/lib/stores/ui-store";
+import { useRouter } from "next/navigation";
 
 const MemoryUniverse = dynamic(
   () => import("@/components/memory-universe/memory-universe").then((m) => m.MemoryUniverse),
@@ -20,6 +21,7 @@ const Timeline = dynamic(
 );
 
 export default function RecallPage() {
+  const router = useRouter();
   const [view, setView] = useState<"universe" | "timeline">("universe");
   const [commandOpen, setCommandOpen] = useState(false);
   const [, setSelectedMemory] = useState<MemoryDetail | null>(null);
@@ -115,6 +117,13 @@ export default function RecallPage() {
             Timeline
           </button>
         </div>
+        <button
+          onClick={() => router.push("/chat")}
+          className="flex items-center gap-2 px-3 py-2 bg-purple-500/10 border border-purple-500/30 rounded-lg text-xs text-purple-400 hover:bg-purple-500/20 transition-colors"
+        >
+          <Brain size={14} />
+          Reason
+        </button>
       </div>
 
       {view === "universe" ? (
@@ -137,6 +146,7 @@ export default function RecallPage() {
         onClose={() => setCommandOpen(false)}
         onSelectMemory={handleSelectMemory}
         projectId={projectId}
+        onOpenChat={() => router.push("/chat")}
       />
     </div>
   );

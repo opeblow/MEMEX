@@ -10,3 +10,4 @@ export {
   useUpdateMemory,
 } from "./use-memory";
 export { useTimeline, useTimelineSummary } from "./use-timeline";
+export { useReason, useStreamReason } from "./use-reasoning";

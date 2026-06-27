@@ -2,9 +2,11 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Command, Tag, ArrowRight } from "lucide-react";
+import { Search, Command, Tag, ArrowRight, Bot, Hash, User, Blocks } from "lucide-react";
 import { useSearchMemories } from "@/hooks/use-memory";
-import type { MemoryDetail } from "@memex/types";
+import type { MemoryDetail, Entity } from "@memex/types";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 const TYPE_COLORS: Record<string, string> = {
   text: "bg-amber-500/20 text-amber-400",
@@ -18,25 +20,45 @@ const TYPE_COLORS: Record<string, string> = {
   default: "bg-gray-500/20 text-gray-400",
 };
 
+type SearchMode = "memories" | "entities" | "commands";
+
+interface CommandItem {
+  id: string;
+  label: string;
+  description: string;
+  icon: React.ReactNode;
+  action: () => void;
+}
+
 interface CommandPaletteProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectMemory: (memory: MemoryDetail) => void;
   projectId: string;
+  onOpenChat?: () => void;
 }
 
-export function CommandPalette({ isOpen, onClose, onSelectMemory, projectId }: CommandPaletteProps) {
+export function CommandPalette({ isOpen, onClose, onSelectMemory, projectId, onOpenChat }: CommandPaletteProps) {
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [mode, setMode] = useState<SearchMode>("memories");
+  const [entities, setEntities] = useState<Entity[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const searchMutation = useSearchMemories();
 
   const results = searchMutation.data?.results || [];
 
+  const commands: CommandItem[] = [
+    { id: "chat", label: "Open AI Chat", description: "Ask questions about your memories", icon: <Bot size={14} />, action: () => { onOpenChat?.(); onClose(); } },
+    { id: "reason", label: "Reason over memories", description: "Get insights with evidence and confidence", icon: <Blocks size={14} />, action: () => { onOpenChat?.(); onClose(); } },
+    { id: "search_entities", label: "Search entities", description: "Find people, projects, technologies", icon: <User size={14} />, action: () => setMode("entities") },
+  ];
+
   useEffect(() => {
     if (isOpen) {
       setQuery("");
       setSelectedIndex(0);
+      setMode("memories");
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [isOpen]);
@@ -45,36 +67,70 @@ export function CommandPalette({ isOpen, onClose, onSelectMemory, projectId }: C
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isOpen) return;
       if (e.key === "Escape") {
-        onClose();
+        if (query === "") {
+          onClose();
+        } else {
+          setQuery("");
+        }
         return;
       }
       if (e.key === "ArrowDown") {
         e.preventDefault();
-        setSelectedIndex((prev) => Math.min(prev + 1, results.length - 1));
+        const maxItems = mode === "memories" ? results.length : mode === "entities" ? entities.length : commands.length;
+        setSelectedIndex((prev) => Math.min(prev + 1, maxItems - 1));
       }
       if (e.key === "ArrowUp") {
         e.preventDefault();
         setSelectedIndex((prev) => Math.max(prev - 1, 0));
       }
-      if (e.key === "Enter" && results[selectedIndex]) {
-        onSelectMemory(results[selectedIndex]);
-        onClose();
+      if (e.key === "Enter") {
+        if (mode === "memories" && results[selectedIndex]) {
+          onSelectMemory(results[selectedIndex]);
+          onClose();
+        } else if (mode === "entities" && entities[selectedIndex]) {
+          setQuery(entities[selectedIndex].name);
+          setMode("memories");
+        } else if (mode === "commands" && commands[selectedIndex]) {
+          commands[selectedIndex].action();
+        }
+      }
+      if (e.key === "Backspace" && query === "" && mode !== "memories") {
+        setMode("memories");
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, results, selectedIndex, onClose, onSelectMemory]);
+  }, [isOpen, results, entities, commands, selectedIndex, onClose, onSelectMemory, query, mode]);
 
   const handleSearch = useCallback(
-    (value: string) => {
+    async (value: string) => {
       setQuery(value);
       setSelectedIndex(0);
       if (value.length >= 2) {
         searchMutation.mutate({ query: value, projectId, limit: 10 });
+        try {
+          const res = await fetch(`${API_BASE}/api/v1/memex/entities/search?project_id=${projectId}&query=${encodeURIComponent(value)}&limit=5`);
+          if (res.ok) {
+            const data = await res.json();
+            setEntities(data.entities || []);
+          }
+        } catch {
+          setEntities([]);
+        }
+      } else {
+        setEntities([]);
       }
     },
     [projectId, searchMutation],
   );
+
+  useEffect(() => {
+    if (query === "" && mode === "memories") {
+      setSelectedIndex(-1);
+    }
+  }, [query, mode]);
+
+  const showCommands = query.length === 0 && mode === "memories";
 
   return (
     <AnimatePresence>
@@ -102,9 +158,14 @@ export function CommandPalette({ isOpen, onClose, onSelectMemory, projectId }: C
                   type="text"
                   value={query}
                   onChange={(e) => handleSearch(e.target.value)}
-                  placeholder="Search memories..."
+                  placeholder={mode === "entities" ? "Search entities..." : "Search memories, entities, or type a command..."}
                   className="flex-1 bg-transparent text-white placeholder-white/30 outline-none text-sm"
                 />
+                {mode !== "memories" && (
+                  <span className="text-xs text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded">
+                    {mode}
+                  </span>
+                )}
                 <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-1 text-xs text-white/30 bg-white/5 rounded border border-white/10">
                   <Command size={12} />
                   K
@@ -112,81 +173,117 @@ export function CommandPalette({ isOpen, onClose, onSelectMemory, projectId }: C
               </div>
 
               <div className="max-h-80 overflow-y-auto">
-                {searchMutation.isPending && query.length >= 2 && (
-                  <div className="px-5 py-8 text-center text-sm text-white/30">
-                    Searching...
+                {showCommands && (
+                  <div className="px-3 py-2">
+                    <p className="text-xs text-white/30 px-2 py-1 uppercase tracking-wider">Commands</p>
+                    {commands.map((cmd, index) => (
+                      <button
+                        key={cmd.id}
+                        onClick={cmd.action}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${
+                          index === selectedIndex ? "bg-white/10" : "hover:bg-white/5"
+                        }`}
+                      >
+                        <span className="text-purple-400">{cmd.icon}</span>
+                        <div className="flex-1">
+                          <p className="text-sm text-white">{cmd.label}</p>
+                          <p className="text-xs text-white/40">{cmd.description}</p>
+                        </div>
+                        <ArrowRight size={14} className="text-white/20" />
+                      </button>
+                    ))}
                   </div>
                 )}
 
-                {!searchMutation.isPending && query.length >= 2 && results.length === 0 && (
-                  <div className="px-5 py-8 text-center text-sm text-white/30">
-                    No memories found
+                {entities.length > 0 && mode === "entities" && (
+                  <div className="px-3 py-2">
+                    <p className="text-xs text-white/30 px-2 py-1 uppercase tracking-wider">Entities</p>
+                    {entities.map((entity, index) => (
+                      <button
+                        key={entity.id}
+                        onClick={() => { setQuery(entity.name); setMode("memories"); }}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${
+                          index === selectedIndex ? "bg-white/10" : "hover:bg-white/5"
+                        }`}
+                      >
+                        <span className="text-cyan-400"><Hash size={14} /></span>
+                        <div className="flex-1">
+                          <p className="text-sm text-white">{entity.name}</p>
+                          <p className="text-xs text-white/40">{entity.entity_type}{entity.description ? ` — ${entity.description}` : ""}</p>
+                        </div>
+                        <span className="text-xs text-white/30 bg-white/5 px-1.5 py-0.5 rounded">{entity.entity_type}</span>
+                      </button>
+                    ))}
                   </div>
                 )}
 
-                {results.map((memory, index) => (
-                  <button
-                    key={memory.id}
-                    onClick={() => {
-                      onSelectMemory(memory);
-                      onClose();
-                    }}
-                    className={`w-full flex items-start gap-3 px-5 py-3 text-left transition-colors ${
-                      index === selectedIndex
-                        ? "bg-white/10"
-                        : "hover:bg-white/5"
-                    }`}
-                  >
-                    <span
-                      className={`shrink-0 px-2 py-0.5 rounded text-xs font-medium ${
-                        TYPE_COLORS[memory.memory_type] || TYPE_COLORS.default
-                      }`}
-                    >
-                      {memory.memory_type}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-white truncate">
-                        {memory.title || "Untitled"}
-                      </p>
-                      {memory.content_preview && (
-                        <p className="text-xs text-white/40 truncate mt-0.5">
-                          {memory.content_preview}
-                        </p>
-                      )}
-                    </div>
-                    {memory.tags && memory.tags.length > 0 && (
-                      <div className="flex gap-1 shrink-0">
-                        {memory.tags.slice(0, 2).map((tag) => (
-                          <span
-                            key={tag}
-                            className="flex items-center gap-1 px-1.5 py-0.5 text-xs text-white/40 bg-white/5 rounded"
-                          >
-                            <Tag size={10} />
-                            {tag}
-                          </span>
-                        ))}
+                {mode === "memories" && query.length >= 2 && (
+                  <>
+                    {searchMutation.isPending && (
+                      <div className="px-5 py-8 text-center text-sm text-white/30">
+                        Searching...
                       </div>
                     )}
-                    <ArrowRight
-                      size={14}
-                      className={`shrink-0 mt-1 ${
-                        index === selectedIndex ? "text-amber-400" : "text-white/20"
-                      }`}
-                    />
-                  </button>
-                ))}
+                    {!searchMutation.isPending && results.length === 0 && entities.length === 0 && (
+                      <div className="px-5 py-8 text-center text-sm text-white/30">
+                        No results found
+                      </div>
+                    )}
+                    {results.map((memory, index) => (
+                      <button
+                        key={memory.id}
+                        onClick={() => { onSelectMemory(memory); onClose(); }}
+                        className={`w-full flex items-start gap-3 px-5 py-3 text-left transition-colors ${
+                          index === selectedIndex ? "bg-white/10" : "hover:bg-white/5"
+                        }`}
+                      >
+                        <span className={`shrink-0 px-2 py-0.5 rounded text-xs font-medium ${TYPE_COLORS[memory.memory_type] || TYPE_COLORS.default}`}>
+                          {memory.memory_type}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-white truncate">{memory.title || "Untitled"}</p>
+                          {memory.content_preview && (
+                            <p className="text-xs text-white/40 truncate mt-0.5">{memory.content_preview}</p>
+                          )}
+                        </div>
+                        {memory.tags && memory.tags.length > 0 && (
+                          <div className="flex gap-1 shrink-0">
+                            {memory.tags.slice(0, 2).map((tag) => (
+                              <span key={tag} className="flex items-center gap-1 px-1.5 py-0.5 text-xs text-white/40 bg-white/5 rounded">
+                                <Tag size={10} />
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        <ArrowRight size={14} className={`shrink-0 mt-1 ${index === selectedIndex ? "text-amber-400" : "text-white/20"}`} />
+                      </button>
+                    ))}
+                  </>
+                )}
+
+                {entities.length > 0 && mode === "memories" && query.length >= 2 && (
+                  <div className="border-t border-white/5 px-3 py-2">
+                    <p className="text-xs text-white/30 px-2 py-1 uppercase tracking-wider">Entities</p>
+                    {entities.map((entity) => (
+                      <button
+                        key={entity.id}
+                        onClick={() => { setQuery(entity.name); }}
+                        className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left hover:bg-white/5 transition-colors"
+                      >
+                        <Hash size={14} className="text-cyan-400" />
+                        <span className="text-sm text-white">{entity.name}</span>
+                        <span className="ml-auto text-xs text-white/30">{entity.entity_type}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center gap-4 px-5 py-3 border-t border-white/10 text-xs text-white/30">
-                <span>
-                  <kbd className="px-1 py-0.5 bg-white/10 rounded">↑↓</kbd> Navigate
-                </span>
-                <span>
-                  <kbd className="px-1 py-0.5 bg-white/10 rounded">↵</kbd> Open
-                </span>
-                <span>
-                  <kbd className="px-1 py-0.5 bg-white/10 rounded">Esc</kbd> Close
-                </span>
+                <span><kbd className="px-1 py-0.5 bg-white/10 rounded">↑↓</kbd> Navigate</span>
+                <span><kbd className="px-1 py-0.5 bg-white/10 rounded">↵</kbd> Open</span>
+                <span><kbd className="px-1 py-0.5 bg-white/10 rounded">Esc</kbd> Close</span>
               </div>
             </div>
           </motion.div>

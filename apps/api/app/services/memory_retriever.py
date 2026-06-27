@@ -156,6 +156,195 @@ class MemoryRetriever:
             for m in memories
         ]
 
+    async def entity_search(
+        self,
+        db: AsyncSession,
+        project_id: str,
+        entity_name: str,
+        top_k: int = 20,
+    ) -> list[dict]:
+        from sqlalchemy import or_
+        result = await db.execute(
+            select(Memory)
+            .where(
+                Memory.project_id == project_id,
+                Memory.status.in_(["indexed", "archived"]),
+                or_(
+                    Memory.content_preview.ilike(f"%{entity_name}%"),
+                    Memory.title.ilike(f"%{entity_name}%"),
+                ),
+            )
+            .order_by(Memory.importance.desc())
+            .limit(top_k)
+        )
+        memories = list(result.scalars().all())
+        return [
+            {
+                "text": m.content_preview or "",
+                "source": "entity",
+                "memory_id": m.id,
+                "chunk_id": None,
+                "relevance_score": 0.9,
+                "evidence": f"Entity '{entity_name}' found in memory",
+                "memory_type": m.memory_type,
+                "importance": m.importance,
+                "title": m.title,
+                "created_at": m.created_at,
+            }
+            for m in memories
+        ]
+
+    async def tag_search(
+        self,
+        db: AsyncSession,
+        project_id: str,
+        tag: str,
+        top_k: int = 20,
+    ) -> list[dict]:
+        result = await db.execute(
+            select(Memory)
+            .where(
+                Memory.project_id == project_id,
+                Memory.status.in_(["indexed", "archived"]),
+                Memory.tags.any(tag),
+            )
+            .order_by(Memory.importance.desc())
+            .limit(top_k)
+        )
+        memories = list(result.scalars().all())
+        return [
+            {
+                "text": m.content_preview or "",
+                "source": "tag",
+                "memory_id": m.id,
+                "chunk_id": None,
+                "relevance_score": 0.85,
+                "evidence": f"Tag '{tag}' matches memory",
+                "memory_type": m.memory_type,
+                "importance": m.importance,
+                "title": m.title,
+                "created_at": m.created_at,
+            }
+            for m in memories
+        ]
+
+    async def recent_search(
+        self,
+        db: AsyncSession,
+        project_id: str,
+        limit: int = 20,
+    ) -> list[dict]:
+        result = await db.execute(
+            select(Memory)
+            .where(
+                Memory.project_id == project_id,
+                Memory.status.in_(["indexed", "archived"]),
+            )
+            .order_by(Memory.created_at.desc())
+            .limit(limit)
+        )
+        memories = list(result.scalars().all())
+        return [
+            {
+                "text": m.content_preview or "",
+                "source": "recent",
+                "memory_id": m.id,
+                "chunk_id": None,
+                "relevance_score": 0.7,
+                "evidence": None,
+                "memory_type": m.memory_type,
+                "importance": m.importance,
+                "title": m.title,
+                "created_at": m.created_at,
+            }
+            for m in memories
+        ]
+
+    async def frequently_referenced_search(
+        self,
+        db: AsyncSession,
+        project_id: str,
+        limit: int = 20,
+    ) -> list[dict]:
+        result = await db.execute(
+            select(Memory)
+            .where(
+                Memory.project_id == project_id,
+                Memory.status.in_(["indexed", "archived"]),
+            )
+            .order_by(Memory.importance.desc())
+            .limit(limit)
+        )
+        memories = list(result.scalars().all())
+        return [
+            {
+                "text": m.content_preview or "",
+                "source": "frequently_referenced",
+                "memory_id": m.id,
+                "chunk_id": None,
+                "relevance_score": m.importance,
+                "evidence": None,
+                "memory_type": m.memory_type,
+                "importance": m.importance,
+                "title": m.title,
+                "created_at": m.created_at,
+            }
+            for m in memories
+        ]
+
+    async def multi_strategy_search(
+        self,
+        db: AsyncSession,
+        user_id: str,
+        query: str,
+        project_id: str,
+        top_k: int = 20,
+    ) -> list[dict]:
+        start = time.monotonic()
+        semantic_results = await self.semantic_search(
+            db=db, query=query, project_id=project_id, top_k=top_k
+        )
+        graph_results = await self.graph_search(
+            user_id=user_id, query=query, project_id=project_id, top_k=top_k
+        )
+        recent_results = await self.recent_search(db=db, project_id=project_id, limit=10)
+        freq_refs = await self.frequently_referenced_search(
+            db=db, project_id=project_id, limit=10
+        )
+        combined = semantic_results + graph_results + recent_results + freq_refs
+        seen: set[str] = set()
+        unique: list[dict] = []
+        for src in combined:
+            mid = src.get("memory_id", "")
+            if mid and mid not in seen:
+                seen.add(mid)
+                unique.append(src)
+        ranked_sources = self.ranker.rank(unique, query)
+        result = [
+            {
+                "text": r.text,
+                "source": r.source,
+                "memory_id": r.memory_id,
+                "chunk_id": r.chunk_id,
+                "relevance_score": r.relevance_score,
+                "evidence": r.evidence,
+                "explanation": r.explanation,
+                "memory_type": r.get("memory_type") if isinstance(r, dict) else None,
+                "importance": r.get("importance") if isinstance(r, dict) else None,
+                "title": r.get("title") if isinstance(r, dict) else None,
+                "created_at": r.get("created_at") if isinstance(r, dict) else None,
+            }
+            for r in ranked_sources
+        ]
+        elapsed = int((time.monotonic() - start) * 1000)
+        logger.info(
+            "Multi-strategy search complete",
+            project_id=project_id,
+            sources_count=len(result),
+            elapsed_ms=elapsed,
+        )
+        return result
+
     async def hybrid_search(
         self,
         db: AsyncSession,

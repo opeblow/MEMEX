@@ -278,3 +278,165 @@ export interface WorkspaceSettings {
   notificationsEnabled: boolean;
   emailDigest: boolean;
 }
+
+export interface TrailStep {
+  step: number;
+  name: string;
+  description: string;
+  data: Record<string, unknown>;
+  memory_ids: string[];
+  duration_ms: number;
+}
+
+export interface ConfidenceFactors {
+  source_count: number;
+  relationship_strength: number;
+  recency_score: number;
+  agreement_score: number;
+  entity_consistency: number;
+  graph_connectivity: number;
+}
+
+export interface MemoryConfidence {
+  score: number;
+  factors: ConfidenceFactors;
+  label: string;
+}
+
+export interface MemoryContribution {
+  memory_id: string;
+  title?: string;
+  relevance: number;
+  evidence?: string;
+  explanation?: string;
+}
+
+export interface RelationshipPath {
+  from_entity: string;
+  to_entity: string;
+  relationship_type: string;
+  strength: number;
+}
+
+export interface TimelinePath {
+  event_type: string;
+  memory_id: string;
+  timestamp?: string;
+  description?: string;
+}
+
+export interface Explanation {
+  summary: string;
+  memories_used: MemoryContribution[];
+  relationship_paths: RelationshipPath[];
+  timeline_paths: TimelinePath[];
+  confidence?: MemoryConfidence;
+}
+
+export interface ReasoningRequest {
+  query: string;
+  project_id: string;
+  include_trail?: boolean;
+  include_explanation?: boolean;
+  top_k?: number;
+}
+
+export interface ReasoningResponse {
+  answer: string;
+  trail_id?: string;
+  explanation?: Explanation;
+  trail?: TrailStep[];
+  processing_time_ms: number;
+}
+
+export interface ReasoningStreamEvent {
+  event: "start" | "step" | "token" | "complete";
+  data?: Record<string, unknown>;
+  content?: string;
+}
+
+export interface MemoryTrailResponse {
+  id: string;
+  project_id: string;
+  question: string;
+  answer?: string;
+  trail_steps: TrailStep[];
+  memory_ids: string[];
+  confidence_score?: number;
+  processing_time_ms?: number;
+  explanation?: Explanation;
+  created_at: string;
+}
+
+export interface MemoryEvidenceResponse {
+  memory_id: string;
+  content_preview?: string;
+  source?: string;
+  memory_type?: string;
+  importance: number;
+  tags?: string[];
+  relationships: Record<string, unknown>[];
+  timeline_events: Record<string, unknown>[];
+  created_at?: string;
+}
+
+export interface Entity {
+  id: string;
+  name: string;
+  entity_type: string;
+  description?: string;
+  metadata?: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EntityListResponse {
+  entities: Entity[];
+  total: number;
+}
+
+export interface Relationship {
+  id: string;
+  source_entity_id: string;
+  target_entity_id: string;
+  relationship_type: string;
+  strength: number;
+  metadata?: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface RelationshipListResponse {
+  relationships: Relationship[];
+  total: number;
+}
+
+export interface ChatMessage {
+  id: string;
+  role: "user" | "assistant" | "system";
+  content: string;
+  explanation?: Explanation;
+  trail_id?: string;
+  timestamp: string;
+}
+
+export interface ReasonHookResult {
+  execute: (query: string, includeTrail?: boolean) => void;
+  answer: string | null;
+  explanation: Explanation | null;
+  trail: TrailStep[] | null;
+  trailId: string | null;
+  confidence: MemoryConfidence | null;
+  isLoading: boolean;
+  processingTimeMs: number | null;
+}
+
+export interface StreamReasonHookResult {
+  streamReason: (query: string, includeTrail?: boolean) => void;
+  answer: string;
+  steps: TrailStep[];
+  memoryIds: string[];
+  isStreaming: boolean;
+  isComplete: boolean;
+  trailId: string | null;
+  explanation: Explanation | null;
+}

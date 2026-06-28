@@ -7,7 +7,6 @@ export const envSchema = z.object({
   NEXT_PUBLIC_API_URL: z.string().url().default("http://localhost:8000"),
   NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
   DATABASE_URL: z.string().default("postgresql+asyncpg://memex:memex@localhost:5432/memex"),
-  REDIS_URL: z.string().default("redis://localhost:6379"),
   JWT_SECRET: z.string().min(16),
   JWT_ALGORITHM: z.string().default("HS256"),
   JWT_ACCESS_EXPIRE_MINUTES: z.coerce.number().default(15),

@@ -2,7 +2,7 @@
 
 ## Setup (Pre-Recording)
 
-- Ensure PostgreSQL, Redis, API, and Frontend are running
+- Ensure PostgreSQL, API, and Frontend are running
 - Pre-login to the app with a seeded account
 - Have a few memories already ingested (text + URL)
 - Open browser at http://localhost:3000/recall
@@ -123,7 +123,7 @@
 ## Demo Checklist
 
 - [ ] Pre-seeded memories exist
-- [ ] PostgreSQL + Redis running
+- [ ] PostgreSQL running
 - [ ] API server running on port 8000
 - [ ] Frontend running on port 3000
 - [ ] OpenAI API key configured (for embeddings + LLM)

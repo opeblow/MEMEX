@@ -220,18 +220,18 @@ memex/
        └────────────────────────────────────┘    │
               │            │            │         │
               ▼            ▼            ▼         │
-       ┌──────────┐ ┌──────────┐ ┌──────────┐    │
-       │PostgreSQL│ │  Redis   │ │  Object   │    │
-       │(primary) │ │ (cache)  │ │  Store    │    │
-       └──────────┘ └──────────┘ └──────────┘    │
-                                                   │
-              ┌────────────────────────────────────┘
-              │
-              ▼
-       ┌──────────────┐
-       │ Worker Queue  │
-       │  (Arq/Redis)  │
-       └──────────────┘
+        ┌──────────┐ ┌──────────┐    │
+        │PostgreSQL│ │  Object   │    │
+        │(primary) │ │  Store    │    │
+        └──────────┘ └──────────┘    │
+                                      │
+               ┌──────────────────────┘
+               │
+               ▼
+        ┌──────────────┐
+        │  Background   │
+        │  Tasks (Arq)  │
+        └──────────────┘
 ```
 
 ### 7.2 Service Descriptions
@@ -261,16 +261,15 @@ memex/
 - **Framework:** Python
 - **Role:** Coordinates multi-strategy search across Cognee's retrieval modes
 - **Handles:** Auto-routing, query classification, result ranking, source attribution
-- **May cache** frequent queries in Redis
 
 #### Auth Service (`services/auth/`)
 - **Framework:** FastAPI
 - **Role:** User registration, login (Google OAuth, email/password), JWT issuance, session management
-- **Stores:** Users in PostgreSQL, sessions in Redis (optional)
+- **Stores:** Users and sessions in PostgreSQL
 - **Integration:** Cognee's user context is passed through for dataset ownership
 
 #### Worker (`apps/worker/`)
-- **Framework:** Arq (Redis-backed task queue)
+- **Framework:** Arq (PostgreSQL-backed task queue)
 - **Role:** Run background tasks — large ingestion, scheduled improve passes, global context indexing, memory maintenance
 - **Tasks:** `ingest_document`, `run_improve`, `build_global_context`, `expire_memories`, `compress_graph`
 
@@ -280,9 +279,8 @@ memex/
 |---|---|---|
 | **Synchronous** | Frontend ↔ API | HTTP/1.1 (REST) |
 | **Streaming** | API → Frontend | Server-Sent Events (SSE) |
-| **Asynchronous** | API → Worker | Redis (Arq queue) |
+| **Asynchronous** | API → Worker | PostgreSQL (Arq queue) |
 | **Synchronous** | API → Cognee | Python SDK (in-process call) |
-| **Cached** | API ↔ Redis | Redis (JSON, session cache) |
 | **Persistent** | Cognee ↔ PostgreSQL | Async SQLAlchemy |
 
 ### 7.4 API Boundaries
@@ -290,7 +288,6 @@ memex/
 - **External (Frontend → API):** REST + SSE. All endpoints under `/api/v1/memex/`. Frontend never talks directly to Cognee.
 - **Internal (API → Cognee):** Python SDK calls within the same process. Cognee is imported as a library, not a service. This gives us low-latency access to the full API surface.
 - **Internal (API → Worker):** Arq tasks for anything that takes > 5 seconds.
-- **Internal (API → Redis):** Direct read/write for session cache and rate limiting.
 
 ---
 
@@ -352,7 +349,6 @@ QueryClientProvider        // TanStack React Query
 | Layer | Cache | TTL | Invalidation |
 |---|---|---|---|
 | **React Query** | In-memory | 5 min (recall), 30 min (static) | On mutation, on focus |
-| **Redis** | Server-side | 1 min (recall), 1 hour (metadata) | Webhook from worker |
 | **CDN** | Edge | 1 hour (static assets) | On deploy |
 | **IndexedDB** | Browser (graph tiles) | Persistent | On version change |
 
@@ -380,7 +376,7 @@ Cognee SDK (import cognee)
         ├───► Relational Store (PostgreSQL)
         ├───► Vector Store (PostgreSQL / pgvector)
         ├───► Graph Store (PostgreSQL / AGE or NetworkX)
-        └───► Session Cache (Redis)
+        └───► Session Cache (PostgreSQL)
 ```
 
 Cognee is NOT a microservice. It is a **Python library** imported directly by the Memory Service. This avoids network overhead for the hot path (remember/recall). The REST API layer in front of Cognee is thin and stateless.
@@ -392,7 +388,7 @@ For this architecture, Cognee is configured as follows:
 | **Relational DB** | PostgreSQL 16 | Production-grade, supports all Cognee relational needs |
 | **Vector Store** | PostgreSQL (pgvector) | Single-database simplicity, no extra infra |
 | **Graph Store** | PostgreSQL (AGE) | Graph operations within PostgreSQL; alternatively uses NetworkX for in-memory speed |
-| **Cache Backend** | Redis | Shared, production-grade session cache |
+| **Cache Backend** | PostgreSQL | Application-level session cache |
 | **Default Embedding** | OpenAI `text-embedding-3-small` | Best quality/cost ratio; configurable |
 | **Default LLM** | OpenAI GPT-4o | For graph extraction, summarization, and completion |
 | **Chunk Size** | 1024 tokens | Balanced between granularity and LLM context |
@@ -423,7 +419,7 @@ Cognee stores three layers of data for every memory:
 - Feedback weights on nodes and edges
 - Global context index (bucket summaries, root summaries)
 
-**Session Cache (Redis — `cognee:session:*`):**
+**Session Cache (PostgreSQL):**
 - QA entries (question, context, answer, feedback)
 - Trace entries (tool calls, reasoning steps)
 - Graph context snapshots
@@ -443,17 +439,6 @@ MEMEX maintains its own application tables alongside Cognee's internal tables:
 | `memex.knowledge_clusters` | Cached cluster metadata for visualization | Aggregated from Cognee graph |
 | `memex.saved_searches` | User-saved recall configurations | Reference recall() parameters |
 | `memex.annotations` | User notes/annotations on memories | Linked to Cognee data IDs |
-
-### 9.4 What Stays in Redis
-
-| Key Pattern | Purpose | TTL |
-|---|---|---|
-| `memex:session:{userId}:{sessionId}` | Active conversation context | 24h |
-| `memex:recall:cache:{queryHash}` | Cached recall results | 60s |
-| `memex:rate:limit:{userId}` | Rate limit counters | 1s-1h |
-| `memex:ws:{userId}` | WebSocket connection registry | Session |
-| `memex:task:{taskId}` | Long-running task status | 24h |
-| `cognee:session:*` | Cognee's session cache | Configurable |
 
 ### 9.5 How Embeddings Are Generated
 
@@ -1116,7 +1101,7 @@ DELETE /auth/api-keys/:id           # Revoke API key
 ### 13.1 Memory Ingestion Flow
 
 ```
-User/Frontend                     API Gateway                Memory Service               Cognee                      PostgreSQL/Redis
+User/Frontend                     API Gateway                Memory Service               Cognee                      PostgreSQL
      │                                │                          │                          │                            │
      │  POST /remember                │                          │                          │                            │
      │───────────────────────────────▶│                          │                          │                            │
@@ -1149,7 +1134,7 @@ User/Frontend                     API Gateway                Memory Service     
 ### 13.2 Recall Flow (Streaming)
 
 ```
-Frontend                     API Gateway                Memory Service               Cognee                      PostgreSQL/Redis
+Frontend                     API Gateway                Memory Service               Cognee                      PostgreSQL
    │                              │                          │                          │                            │
    │  POST /recall (stream=true)  │                          │                          │                            │
    │─────────────────────────────▶│                          │                          │                            │
@@ -1246,8 +1231,6 @@ Cognee manages context internally. Our configuration:
 ```
 Session Start
     │
-    ├──→ Session created (Redis: cognee:session:{user}:{sessionId})
-    │
     ├──→ User asks question
     │       │
     │       ├──→ Recall with session_id
@@ -1258,7 +1241,7 @@ Session Start
     │       │       - Graph context (if retrieved)
     │       │       - System prompt (project instructions)
     │       │
-    │       └──→ QA entry stored in session (Redis)
+    │       └──→ QA entry stored in session
     │
     ├──→ User provides feedback (thumbs up/down)
     │       └──→ Feedback stored in session entry
@@ -1288,7 +1271,7 @@ Session Start
 | Empty recall results | Return "No relevant memories found" + suggest rephrasing | No |
 | Ingestion failure (corrupt file) | Catch early, return specific error | No |
 | Graph query timeout | Fall back to vector-only search | No |
-| Redis connection failure | Degrade to local memory (lession session-aware recall) | Background recovery |
+
 
 ---
 
@@ -1426,21 +1409,15 @@ No spinners. No skeleton loaders. Only living transitions.
                     │  (Railway)  │
                     │  pgvector   │
                     └─────────────┘
-                           │
-                           ▼
-                    ┌─────────────┐
-                    │  Redis      │
-                    │  (Railway)  │
-                    └─────────────┘
 ```
 
 ### 17.2 Environments
 
-| Environment | URL | PostgreSQL | Redis | LLM Model |
-|---|---|---|---|---|
-| **Preview** | `pr-*.memex.pages.dev` | Ephemeral (Railway) | Ephemeral | GPT-4o-mini |
-| **Staging** | `staging.memex.sh` | Shared (Railway) | Shared | GPT-4o-mini |
-| **Production** | `memex.sh` | Dedicated (Railway) | Dedicated | GPT-4o |
+| Environment | URL | PostgreSQL | LLM Model |
+|---|---|---|---|
+| **Preview** | `pr-*.memex.pages.dev` | Ephemeral (Railway) | GPT-4o-mini |
+| **Staging** | `staging.memex.sh` | Shared (Railway) | GPT-4o-mini |
+| **Production** | `memex.sh` | Dedicated (Railway) | GPT-4o |
 
 ### 17.3 CI/CD Pipeline
 
@@ -1480,7 +1457,6 @@ Push to main / PR
 
 **Strategy: Simplicity**
 - Single PostgreSQL instance (Railway Starter, 1GB RAM)
-- Single Redis instance (Railway Starter, 256MB)
 - Single FastAPI instance (Railway, 512MB, 1 CPU)
 - Single Worker instance (Railway, 512MB)
 - Cognee configured for single-PostgreSQL mode (graph, vectors, relational all in one DB)
@@ -1496,7 +1472,6 @@ Push to main / PR
 **Strategy: Separation + Caching**
 - PostgreSQL read replica for recall queries
 - Separate pgvector index for vector search
-- Redis cluster (2 nodes) for session cache + rate limiting
 - API Gateway scaled to 3 instances (Railway horizontal scaling)
 - Worker scaled to 2 instances
 - Cognee: separate graph store from relational store (NetworkX in-memory or Neo4j dedicated)
@@ -1512,7 +1487,6 @@ Push to main / PR
 - PostgreSQL cluster (primary + 2 read replicas, 8GB RAM each)
 - Dedicated pgvector with HNSW index
 - Neo4j dedicated instance for graph store
-- Redis cluster (4 nodes)
 - API Gateway: 20+ instances (auto-scaled)
 - Worker: 10+ instances
 - Cognee: Enterprise configuration with dedicated graph DB + vector DB
@@ -1532,7 +1506,7 @@ Push to main / PR
 | **Graph traversal** | Neo4j with focused neighborhood queries, limit depth |
 | **LLM latency** | Streaming, smaller model for simple queries, caching |
 | **Ingestion throughput** | Background queue, batch processing, parallel chunking |
-| **Session cache memory** | Redis with TTL, LRU eviction |
+| **Session cache memory** | In-memory with TTL |
 | **Frontend bundle** | Code splitting, tree shaking, route-based lazy loading |
 | **3D rendering** | LOD (level of detail), frustum culling, instanced meshes |
 
@@ -1576,7 +1550,7 @@ Push to main / PR
 | OpenAI API rate limits | Slow recall/ingestion | Queue + retry, use GPT-4o-mini for non-critical paths |
 | PostgreSQL pgvector performance degrades at scale | Slow recall | HNSW index, pre-filtering, limit vector dimensions |
 | 3D scene (R3F) performance on low-end hardware | Poor UX | LOD, fallback to 2D React Flow view |
-| Redis session cache data loss | Lost session context | Redis AOF persistence, session also stored in PostgreSQL periodically |
+| Session state persistence | Lost session context | Session data persisted in PostgreSQL |
 | Graph grows unbounded | Slow query, high cost | Memory lifecycle management (TTL for non-important memories) |
 
 ### Product Risks
@@ -1967,7 +1941,7 @@ apps/worker/
 | **Memory Engine** | Cognee | LangChain memory is too shallow; building from scratch is infeasible |
 | **Graph DB** | PostgreSQL (AGE) | Neo4j adds infra complexity for MVP; AGE gives graph features in existing DB |
 | **Vector DB** | pgvector | Pinecone/Weaviate add cost and complexity; pgvector in existing DB is simpler |
-| **Session Cache** | Redis | In-memory fast; filesystem is too slow for multi-turn conversations |
+| **Session Cache** | PostgreSQL | Persistent storage for multi-turn conversations |
 | **3D Rendering** | React Three Fiber | raw Three.js is harder to integrate with React; Unity/Unreal are overkill |
 | **Monorepo** | Turborepo + pnpm | Nx is heavier; yarn workspaces have slower installs |
 | **Styling** | Tailwind | CSS-in-JS (styled-components) has runtime cost; vanilla CSS is slower to develop with |
@@ -1982,8 +1956,7 @@ apps/worker/
 COGNEE_RELATIONAL_DB=postgresql+asyncpg://...
 COGNEE_VECTOR_DB=postgresql+asyncpg://...  # pgvector
 COGNEE_GRAPH_DB=postgresql+asyncpg://...   # AGE or networkx
-COGNEE_CACHE_BACKEND=redis
-COGNEE_REDIS_URL=redis://...
+COGNEE_CACHE_BACKEND=postgresql
 COGNEE_DEFAULT_EMBEDDING_MODEL=text-embedding-3-small
 COGNEE_DEFAULT_LLM_MODEL=gpt-4o
 COGNEE_CHUNK_SIZE=1024
@@ -1992,7 +1965,6 @@ COGNEE_ENABLE_BACKEND_ACCESS_CONTROL=true
 
 # MEMEX Configuration
 MEMEX_DATABASE_URL=postgresql+asyncpg://...
-MEMEX_REDIS_URL=redis://...
 MEMEX_JWT_SECRET=...
 MEMEX_JWT_ALGORITHM=RS256
 MEMEX_JWT_ACCESS_EXPIRE_MINUTES=15

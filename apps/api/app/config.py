@@ -10,7 +10,6 @@ class Settings(BaseSettings):
 
     database_url: str = "postgresql+asyncpg://memex:memex@localhost:5432/memex"
     database_url_sync: str = "postgresql+psycopg2://memex:memex@localhost:5432/memex"
-    redis_url: str = "redis://localhost:6379"
 
     jwt_secret: str = "change-me-to-a-long-random-string"
     jwt_algorithm: str = "HS256"

@@ -115,11 +115,6 @@ Built on five core pillars:
         │            PostgreSQL 16 + pgvector           │
         │         (Single DB: Graph + Vector + SQL)     │
         └───────────────────────────────────────────────┘
-                           │
-                    ┌──────▼──────┐
-                    │    Redis    │
-                    │   (Cache)   │
-                    └─────────────┘
 ```
 
 ### Memory Lifecycle
@@ -160,7 +155,7 @@ MEMEX is built on **[Cognee](https://github.com/topoteretes/cognee)**, the open-
 | **`cognee.forget()`** | Lifecycle management — delete from all stores |
 | **Graph store** | Knowledge graph for entity/relationship queries |
 | **Vector store** | Semantic search with pgvector |
-| **Session cache** | Short-term conversational context in Redis |
+| **Session cache** | Short-term conversational context in PostgreSQL |
 | **Auto-routing** | Query classification to optimal retrieval strategy |
 | **Self-improvement** | Automatic improve() after every remember() |
 
@@ -197,8 +192,6 @@ Cognee is imported as a **Python library** (not a microservice), giving MEMEX lo
 | **SQLAlchemy** (async) | ORM |
 | **Alembic** | Database migrations |
 | **PostgreSQL 16** + **pgvector** | Primary database |
-| **Redis 7** | Caching and session store |
-| **Arq** | Background task queue |
 | **OpenAI** (GPT-4o + text-embedding-3-small) | LLM and embeddings |
 | **structlog** | Structured logging |
 
@@ -223,7 +216,7 @@ Cognee is imported as a **Python library** (not a microservice), giving MEMEX lo
 - Node.js 20+
 - Python 3.12+
 - pnpm 9+
-- Docker Desktop (for PostgreSQL and Redis)
+- Docker Desktop (for PostgreSQL)
 - OpenAI API key
 
 ### Quick Start
@@ -252,7 +245,7 @@ cd ../..
 cp .env.example .env
 # Edit .env with your credentials (JWT_SECRET, OPENAI_API_KEY, etc.)
 
-# Start infrastructure (PostgreSQL + Redis)
+# Start infrastructure (PostgreSQL)
 docker compose -f docker/docker-compose.yml up -d
 
 # Run database migrations
@@ -274,7 +267,6 @@ The frontend will be available at **http://localhost:3000** and the API at **htt
 | Variable | Required | Description |
 |---|---|---|
 | `DATABASE_URL` | Yes | PostgreSQL connection string |
-| `REDIS_URL` | Yes | Redis connection string |
 | `JWT_SECRET` | Yes | Secret for JWT signing |
 | `OPENAI_API_KEY` | Yes | OpenAI API key |
 | `GOOGLE_CLIENT_ID` | No | Google OAuth client ID |
@@ -300,7 +292,6 @@ docker exec memex-api alembic upgrade head
 ### Infrastructure Requirements
 
 - PostgreSQL 16 with pgvector extension
-- Redis 7+
 - Python 3.12+ runtime
 - Node.js 20+ runtime
 

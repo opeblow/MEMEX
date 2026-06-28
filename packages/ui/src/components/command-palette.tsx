@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback, type ReactNode } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Search } from "lucide-react";
+import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "../lib/cn";
-import { motion, AnimatePresence } from "framer-motion";
 
 interface CommandItem {
   id: string;
@@ -99,12 +99,11 @@ export function CommandPalette({
               </div>
               <div className="max-h-72 overflow-y-auto p-2">
                 {filtered.length === 0 && (
-                  <p className="p-4 text-center text-sm text-white/30">
-                    No results found
-                  </p>
+                  <p className="p-4 text-center text-sm text-white/30">No results found</p>
                 )}
                 {filtered.map((item, index) => (
                   <button
+                    type="button"
                     key={item.id}
                     onClick={() => {
                       item.onSelect();
@@ -119,9 +118,7 @@ export function CommandPalette({
                     )}
                   >
                     {item.icon && (
-                      <span className="flex h-5 w-5 items-center justify-center">
-                        {item.icon}
-                      </span>
+                      <span className="flex h-5 w-5 items-center justify-center">{item.icon}</span>
                     )}
                     <div className="flex-1">
                       <p className="text-sm font-medium">{item.label}</p>

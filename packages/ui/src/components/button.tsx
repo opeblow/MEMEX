@@ -1,8 +1,8 @@
 "use client";
 
-import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react";
 import { Slot } from "@radix-ui/react-slot";
-import { cva, type VariantProps } from "class-variance-authority";
+import { type VariantProps, cva } from "class-variance-authority";
+import { type ButtonHTMLAttributes, type ReactNode, forwardRef } from "react";
 import { cn } from "../lib/cn";
 
 const buttonVariants = cva(
@@ -10,12 +10,10 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary:
-          "bg-white text-black hover:bg-white/90 active:scale-[0.98]",
+        primary: "bg-white text-black hover:bg-white/90 active:scale-[0.98]",
         secondary:
           "border border-white/10 bg-white/5 text-white hover:bg-white/10 active:scale-[0.98]",
-        ghost:
-          "text-white/60 hover:text-white hover:bg-white/5 active:scale-[0.98]",
+        ghost: "text-white/60 hover:text-white hover:bg-white/5 active:scale-[0.98]",
         danger:
           "bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 active:scale-[0.98]",
         glass:
@@ -88,6 +86,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <circle
               className="opacity-25"

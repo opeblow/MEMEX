@@ -49,28 +49,19 @@ export function clearTokens() {
 }
 
 export async function loginWithEmail(credentials: LoginCredentials) {
-  const response = await api.post<AuthResponse>(
-    "/api/v1/memex/auth/login",
-    credentials,
-  );
+  const response = await api.post<AuthResponse>("/api/v1/memex/auth/login", credentials);
   setTokens(response.accessToken, response.refreshToken);
   return response;
 }
 
 export async function registerWithEmail(credentials: RegisterCredentials) {
-  const response = await api.post<AuthResponse>(
-    "/api/v1/memex/auth/register",
-    credentials,
-  );
+  const response = await api.post<AuthResponse>("/api/v1/memex/auth/register", credentials);
   setTokens(response.accessToken, response.refreshToken);
   return response;
 }
 
 export async function loginWithGoogle(token: string) {
-  const response = await api.post<AuthResponse>(
-    "/api/v1/memex/auth/google",
-    { token },
-  );
+  const response = await api.post<AuthResponse>("/api/v1/memex/auth/google", { token });
   setTokens(response.accessToken, response.refreshToken);
   return response;
 }
@@ -97,24 +88,22 @@ export async function getCurrentUser() {
 }
 
 export async function verifyEmail(token: string) {
-  return api.post<{ status: string; message: string }>(
-    "/api/v1/memex/auth/verify-email",
-    { token },
-  );
+  return api.post<{ status: string; message: string }>("/api/v1/memex/auth/verify-email", {
+    token,
+  });
 }
 
 export async function requestPasswordReset(email: string) {
-  return api.post<{ status: string; message: string }>(
-    "/api/v1/memex/auth/request-reset",
-    { email },
-  );
+  return api.post<{ status: string; message: string }>("/api/v1/memex/auth/request-reset", {
+    email,
+  });
 }
 
 export async function resetPassword(token: string, password: string) {
-  return api.post<{ status: string; message: string }>(
-    "/api/v1/memex/auth/reset-password",
-    { token, password },
-  );
+  return api.post<{ status: string; message: string }>("/api/v1/memex/auth/reset-password", {
+    token,
+    password,
+  });
 }
 
 export async function createWorkspace(data: {

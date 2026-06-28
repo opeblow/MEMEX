@@ -1,14 +1,27 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Upload, FileText, ChevronDown, ChevronRight,
-  CheckCircle2, XCircle, Loader2, Globe, Github,
-  Table, Braces, File, Trash2, Database, RefreshCw,
-} from "lucide-react";
+import { PageSkeleton } from "@/components/ui/loading-skeleton";
+import { useCancelImport, useImportJobs, useSources } from "@/hooks";
 import type { ImportJob, Source } from "@memex/types";
-import { useImportJobs, useSources, useCancelImport } from "@/hooks";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  Braces,
+  CheckCircle2,
+  ChevronDown,
+  ChevronRight,
+  Database,
+  File,
+  FileText,
+  Github,
+  Globe,
+  Loader2,
+  RefreshCw,
+  Table,
+  Trash2,
+  Upload,
+  XCircle,
+} from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -41,7 +54,11 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: "text-white/30",
 };
 
-function ImportProgress({ jobId, onComplete, onCancel }: { jobId: string; onComplete: () => void; onCancel: () => void }) {
+function ImportProgress({
+  jobId,
+  onComplete,
+  onCancel,
+}: { jobId: string; onComplete: () => void; onCancel: () => void }) {
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState("queued");
   const [step, setStep] = useState("");
@@ -49,9 +66,7 @@ function ImportProgress({ jobId, onComplete, onCancel }: { jobId: string; onComp
   const cancelImport = useCancelImport();
 
   useEffect(() => {
-    const es = new EventSource(
-      `${API_BASE}/api/v1/memex/imports/${jobId}/stream`,
-    );
+    const es = new EventSource(`${API_BASE}/api/v1/memex/imports/${jobId}/stream`);
     es.onmessage = (event) => {
       try {
         const msg = JSON.parse(event.data);
@@ -70,7 +85,9 @@ function ImportProgress({ jobId, onComplete, onCancel }: { jobId: string; onComp
         }
       } catch {}
     };
-    es.onerror = () => { es.close(); };
+    es.onerror = () => {
+      es.close();
+    };
     return () => es.close();
   }, [jobId, onComplete]);
 
@@ -85,7 +102,11 @@ function ImportProgress({ jobId, onComplete, onCancel }: { jobId: string; onComp
         <span className="text-white/60">{step || status}</span>
         <div className="flex items-center gap-2">
           {status === "running" || status === "queued" ? (
-            <button onClick={handleCancel} className="text-white/20 hover:text-red-400 transition-colors">
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="text-white/20 hover:text-red-400 transition-colors"
+            >
               <Trash2 size={12} />
             </button>
           ) : null}
@@ -100,9 +121,11 @@ function ImportProgress({ jobId, onComplete, onCancel }: { jobId: string; onComp
           animate={{ width: `${progress}%` }}
           transition={{ duration: 0.5, ease: "easeOut" }}
           className={`h-full rounded-full ${
-            status === "failed" ? "bg-red-500"
-            : status === "completed" ? "bg-emerald-500"
-            : "bg-purple-500"
+            status === "failed"
+              ? "bg-red-500"
+              : status === "completed"
+                ? "bg-emerald-500"
+                : "bg-purple-500"
           }`}
         />
       </div>
@@ -110,15 +133,22 @@ function ImportProgress({ jobId, onComplete, onCancel }: { jobId: string; onComp
         {status === "running" && <Loader2 size={12} className="animate-spin text-purple-400" />}
         {status === "completed" && <CheckCircle2 size={12} className="text-emerald-400" />}
         {status === "failed" && <XCircle size={12} className="text-red-400" />}
-        <span className={
-          status === "failed" ? "text-red-400"
-          : status === "completed" ? "text-emerald-400"
-          : "text-white/40"
-        }>
-          {status === "completed" ? "Import complete"
-           : status === "failed" ? "Import failed"
-           : status === "queued" ? "Waiting..."
-           : "Processing..."}
+        <span
+          className={
+            status === "failed"
+              ? "text-red-400"
+              : status === "completed"
+                ? "text-emerald-400"
+                : "text-white/40"
+          }
+        >
+          {status === "completed"
+            ? "Import complete"
+            : status === "failed"
+              ? "Import failed"
+              : status === "queued"
+                ? "Waiting..."
+                : "Processing..."}
         </span>
       </div>
     </div>
@@ -141,7 +171,11 @@ export default function IngestPage() {
   useEffect(() => {
     const stored = localStorage.getItem("memex_active_project");
     if (stored) {
-      try { setProjectId(JSON.parse(stored).id || stored); } catch { setProjectId(stored); }
+      try {
+        setProjectId(JSON.parse(stored).id || stored);
+      } catch {
+        setProjectId(stored);
+      }
     }
   }, []);
 
@@ -150,6 +184,7 @@ export default function IngestPage() {
   const jobs = jobsData?.jobs || [];
   const sources = sourcesData?.sources || [];
 
+  const [isLoading, setIsLoading] = useState(true);
   const [isDragOver, setIsDragOver] = useState(false);
   const [importing, setImporting] = useState(false);
   const [jobsOpen, setJobsOpen] = useState(false);
@@ -158,51 +193,72 @@ export default function IngestPage() {
   const [showUrlInput, setShowUrlInput] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    if (projectId) {
+      setTimeout(() => setIsLoading(false), 300);
+    }
+  }, [projectId]);
+
   const activeJob = jobs.find((j: ImportJob) => j.status === "running" || j.status === "queued");
-  const recentJobs = jobs.filter((j: ImportJob) => j.status !== "queued" && j.status !== "running").slice(0, 10);
+  const recentJobs = jobs
+    .filter((j: ImportJob) => j.status !== "queued" && j.status !== "running")
+    .slice(0, 10);
 
-  const uploadFile = useCallback(async (file: File) => {
-    setImporting(true);
-    try {
-      const accessToken = localStorage.getItem("memex_access_token");
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("project_id", projectId);
-      const sourceType = detectSourceType(file);
-      formData.append("source_type", sourceType);
-      await fetch(`${API_BASE}/api/v1/memex/imports/upload`, {
-        method: "POST",
-        ...(accessToken ? { headers: { Authorization: `Bearer ${accessToken}` } } : {}),
-        body: formData,
-      });
-      setTimeout(refetchJobs, 500);
-    } catch {}
-    setImporting(false);
-  }, [projectId, refetchJobs]);
+  if (isLoading && !projectId) {
+    return <PageSkeleton />;
+  }
 
-  const startImport = useCallback(async (sourceType: string, body: Record<string, unknown>) => {
-    setImporting(true);
-    try {
-      const accessToken = localStorage.getItem("memex_access_token");
-      await fetch(`${API_BASE}/api/v1/memex/imports`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-        },
-        body: JSON.stringify({ ...body, project_id: projectId, source_type: sourceType }),
-      });
-      setTimeout(refetchJobs, 500);
-    } catch {}
-    setImporting(false);
-  }, [projectId, refetchJobs]);
+  const uploadFile = useCallback(
+    async (file: File) => {
+      setImporting(true);
+      try {
+        const accessToken = localStorage.getItem("memex_access_token");
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("project_id", projectId);
+        const sourceType = detectSourceType(file);
+        formData.append("source_type", sourceType);
+        await fetch(`${API_BASE}/api/v1/memex/imports/upload`, {
+          method: "POST",
+          ...(accessToken ? { headers: { Authorization: `Bearer ${accessToken}` } } : {}),
+          body: formData,
+        });
+        setTimeout(refetchJobs, 500);
+      } catch {}
+      setImporting(false);
+    },
+    [projectId, refetchJobs],
+  );
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    const files = Array.from(e.dataTransfer.files);
-    for (const file of files) uploadFile(file);
-  }, [uploadFile]);
+  const startImport = useCallback(
+    async (sourceType: string, body: Record<string, unknown>) => {
+      setImporting(true);
+      try {
+        const accessToken = localStorage.getItem("memex_access_token");
+        await fetch(`${API_BASE}/api/v1/memex/imports`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+          },
+          body: JSON.stringify({ ...body, project_id: projectId, source_type: sourceType }),
+        });
+        setTimeout(refetchJobs, 500);
+      } catch {}
+      setImporting(false);
+    },
+    [projectId, refetchJobs],
+  );
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragOver(false);
+      const files = Array.from(e.dataTransfer.files);
+      for (const file of files) uploadFile(file);
+    },
+    [uploadFile],
+  );
 
   const handleUrlSubmit = useCallback(() => {
     if (!urlInput.trim()) return;
@@ -235,10 +291,19 @@ export default function IngestPage() {
       </div>
 
       <div
-        onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setIsDragOver(true);
+        }}
         onDragLeave={() => setIsDragOver(false)}
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            fileInputRef.current?.click();
+          }
+        }}
         className={`relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
           isDragOver
             ? "border-purple-500 bg-purple-500/10 scale-[1.02]"
@@ -266,9 +331,7 @@ export default function IngestPage() {
             <p className="text-sm text-white/60">
               {isDragOver ? "Drop to import" : "Drop files here or click to browse"}
             </p>
-            <p className="text-xs text-white/30 mt-1">
-              Markdown, PDF, CSV, JSON, Plain Text
-            </p>
+            <p className="text-xs text-white/30 mt-1">Markdown, PDF, CSV, JSON, Plain Text</p>
           </div>
         </motion.div>
         {importing && (
@@ -287,6 +350,7 @@ export default function IngestPage() {
 
       <div className="flex gap-2 flex-wrap">
         <button
+          type="button"
           onClick={() => setShowUrlInput(!showUrlInput)}
           className="flex items-center gap-2 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-xs text-white/60 hover:text-white/80 hover:bg-white/10 transition-colors"
         >
@@ -294,7 +358,13 @@ export default function IngestPage() {
           Import from URL
         </button>
         <button
-          onClick={() => startImport("markdown", { data: "# New Memory\n\nContent here...", display_name: "Quick Note" })}
+          type="button"
+          onClick={() =>
+            startImport("markdown", {
+              data: "# New Memory\n\nContent here...",
+              display_name: "Quick Note",
+            })
+          }
           className="flex items-center gap-2 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-xs text-white/60 hover:text-white/80 hover:bg-white/10 transition-colors"
         >
           <FileText size={14} />
@@ -319,6 +389,7 @@ export default function IngestPage() {
               className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/60 focus:outline-none focus:border-purple-500/50 placeholder-white/20"
             />
             <button
+              type="button"
               onClick={handleUrlSubmit}
               disabled={!urlInput.trim() || importing}
               className="px-3 py-2 bg-purple-500/20 border border-purple-500/30 rounded-lg text-xs text-purple-400 hover:bg-purple-500/30 disabled:opacity-30 transition-colors"
@@ -341,16 +412,13 @@ export default function IngestPage() {
               {SOURCE_LABELS[activeJob.source_type] || activeJob.source_type}
             </span>
           </div>
-          <ImportProgress
-            jobId={activeJob.id}
-            onComplete={refetchJobs}
-            onCancel={refetchJobs}
-          />
+          <ImportProgress jobId={activeJob.id} onComplete={refetchJobs} onCancel={refetchJobs} />
         </motion.div>
       )}
 
       <div className="space-y-3">
         <button
+          type="button"
           onClick={() => setSourcesOpen(!sourcesOpen)}
           className="flex items-center gap-2 text-xs text-white/40 hover:text-white/60 transition-colors"
         >
@@ -366,9 +434,7 @@ export default function IngestPage() {
               exit={{ opacity: 0, height: 0 }}
               className="space-y-1"
             >
-              {sources.length === 0 && (
-                <p className="text-xs text-white/20 py-2">No sources yet</p>
-              )}
+              {sources.length === 0 && <p className="text-xs text-white/20 py-2">No sources yet</p>}
               {sources.map((source: Source) => (
                 <div
                   key={source.id}
@@ -376,7 +442,11 @@ export default function IngestPage() {
                 >
                   {SOURCE_ICONS[source.source_type] || <FileText size={12} />}
                   <span className="text-xs text-white/60 flex-1 truncate">
-                    {source.display_name || source.url || source.file_path || SOURCE_LABELS[source.source_type] || source.source_type}
+                    {source.display_name ||
+                      source.url ||
+                      source.file_path ||
+                      SOURCE_LABELS[source.source_type] ||
+                      source.source_type}
                   </span>
                   <span className="text-xs text-white/30">{source.memory_count} memories</span>
                   {source.last_import_at && (
@@ -393,6 +463,7 @@ export default function IngestPage() {
 
       <div className="space-y-3">
         <button
+          type="button"
           onClick={() => setJobsOpen(!jobsOpen)}
           className="flex items-center gap-2 text-xs text-white/40 hover:text-white/60 transition-colors"
         >
@@ -422,11 +493,15 @@ export default function IngestPage() {
                     {job.processed_items > 0 && ` (${job.processed_items})`}
                   </span>
                   <span className={`text-xs ${STATUS_COLORS[job.status] || "text-white/30"}`}>
-                    {job.status === "completed" ? "100%"
-                     : job.status === "failed" ? "Failed"
-                     : `${job.progress_pct}%`}
+                    {job.status === "completed"
+                      ? "100%"
+                      : job.status === "failed"
+                        ? "Failed"
+                        : `${job.progress_pct}%`}
                   </span>
-                  {job.status === "completed" && <CheckCircle2 size={12} className="text-emerald-400" />}
+                  {job.status === "completed" && (
+                    <CheckCircle2 size={12} className="text-emerald-400" />
+                  )}
                   {job.status === "failed" && <XCircle size={12} className="text-red-400" />}
                 </div>
               ))}

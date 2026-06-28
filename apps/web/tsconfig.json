@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": [
-      "ES2022",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "moduleDetection": "force",
@@ -30,34 +26,15 @@
       }
     ],
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@memex/ui": [
-        "../../packages/ui/src"
-      ],
-      "@memex/types": [
-        "../../packages/types/src"
-      ],
-      "@memex/hooks": [
-        "../../packages/hooks/src"
-      ],
-      "@memex/animations": [
-        "../../packages/animations/src"
-      ],
-      "@memex/config": [
-        "../../packages/config/src"
-      ]
+      "@/*": ["./src/*"],
+      "@memex/ui": ["../../packages/ui/src"],
+      "@memex/types": ["../../packages/types/src"],
+      "@memex/hooks": ["../../packages/hooks/src"],
+      "@memex/animations": ["../../packages/animations/src"],
+      "@memex/config": ["../../packages/config/src"]
     },
     "noEmit": true
   },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
 }

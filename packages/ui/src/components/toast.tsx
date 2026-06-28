@@ -1,9 +1,9 @@
 "use client";
 
-import { forwardRef, type ComponentPropsWithoutRef, type ElementRef } from "react";
 import * as ToastPrimitive from "@radix-ui/react-toast";
+import { type VariantProps, cva } from "class-variance-authority";
+import { type ComponentPropsWithoutRef, type ElementRef, forwardRef } from "react";
 import { cn } from "../lib/cn";
-import { cva, type VariantProps } from "class-variance-authority";
 
 const ToastProvider = ToastPrimitive.Provider;
 
@@ -43,16 +43,15 @@ const toastVariants = cva(
 type ToastProps = ComponentPropsWithoutRef<typeof ToastPrimitive.Root> &
   VariantProps<typeof toastVariants>;
 
-const Toast = forwardRef<
-  ElementRef<typeof ToastPrimitive.Root>,
-  ToastProps
->(({ className, variant, ...props }, ref) => (
-  <ToastPrimitive.Root
-    ref={ref}
-    className={cn(toastVariants({ variant }), className)}
-    {...props}
-  />
-));
+const Toast = forwardRef<ElementRef<typeof ToastPrimitive.Root>, ToastProps>(
+  ({ className, variant, ...props }, ref) => (
+    <ToastPrimitive.Root
+      ref={ref}
+      className={cn(toastVariants({ variant }), className)}
+      {...props}
+    />
+  ),
+);
 
 Toast.displayName = ToastPrimitive.Root.displayName;
 
@@ -60,11 +59,7 @@ const ToastTitle = forwardRef<
   ElementRef<typeof ToastPrimitive.Title>,
   ComponentPropsWithoutRef<typeof ToastPrimitive.Title>
 >(({ className, ...props }, ref) => (
-  <ToastPrimitive.Title
-    ref={ref}
-    className={cn("text-sm font-semibold", className)}
-    {...props}
-  />
+  <ToastPrimitive.Title ref={ref} className={cn("text-sm font-semibold", className)} {...props} />
 ));
 
 ToastTitle.displayName = ToastPrimitive.Title.displayName;
@@ -82,11 +77,5 @@ const ToastDescription = forwardRef<
 
 ToastDescription.displayName = ToastPrimitive.Description.displayName;
 
-export {
-  ToastProvider,
-  ToastViewport,
-  Toast,
-  ToastTitle,
-  ToastDescription,
-};
+export { ToastProvider, ToastViewport, Toast, ToastTitle, ToastDescription };
 export type { ToastProps };

@@ -1,12 +1,13 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import { ChatSkeleton } from "@/components/ui/loading-skeleton";
 import { useUIStore } from "@/lib/stores/ui-store";
+import dynamic from "next/dynamic";
 
-const AIChat = dynamic(
-  () => import("@/components/chat/ai-chat").then((m) => m.AIChat),
-  { ssr: false },
-);
+const AIChat = dynamic(() => import("@/components/chat/ai-chat").then((m) => m.AIChat), {
+  ssr: false,
+  loading: () => <ChatSkeleton />,
+});
 
 export default function ChatPage() {
   const activeProjectId = useUIStore((s) => s.activeProjectId);

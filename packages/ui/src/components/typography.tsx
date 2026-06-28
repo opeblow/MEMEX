@@ -1,6 +1,6 @@
-import type { ReactNode, HTMLAttributes } from "react";
+import { type VariantProps, cva } from "class-variance-authority";
+import type { HTMLAttributes, ReactNode } from "react";
 import { cn } from "../lib/cn";
-import { cva, type VariantProps } from "class-variance-authority";
 
 const typographyVariants = cva("", {
   variants: {

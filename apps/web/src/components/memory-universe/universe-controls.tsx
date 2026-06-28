@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
-import { useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
+import { useThree } from "@react-three/fiber";
+import { useEffect } from "react";
 import * as THREE from "three";
 
 interface UniverseControlsProps {
@@ -24,7 +24,7 @@ export function UniverseControls({ target, selectedId }: UniverseControlsProps) 
       function animate() {
         const elapsed = Date.now() - startTime;
         const t = Math.min(elapsed / duration, 1);
-        const ease = 1 - Math.pow(1 - t, 3);
+        const ease = 1 - (1 - t) ** 3;
 
         camera.position.lerpVectors(start, end.clone().add(new THREE.Vector3(0, 0, 3)), ease);
         camera.lookAt(end);

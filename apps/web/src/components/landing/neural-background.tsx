@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useMemo, useEffect, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
 const NEURON_COUNT = 200;
@@ -66,7 +66,10 @@ function generateNeuronData(): {
     }
 
     const mix = Math.random();
-    const color = amber.clone().lerp(cyan, mix * 0.6).lerp(warm, mix * 0.2);
+    const color = amber
+      .clone()
+      .lerp(cyan, mix * 0.6)
+      .lerp(warm, mix * 0.2);
     colors[i * 3] = color.r;
     colors[i * 3 + 1] = color.g;
     colors[i * 3 + 2] = color.b;
@@ -83,7 +86,11 @@ function generateNeuronData(): {
     const py = positions[i3 + 1];
     const pz = positions[i3 + 2];
     if (px === undefined || py === undefined || pz === undefined) continue;
-    for (let attempt = 0; attempt < NEURON_COUNT && connections.length < i + matches + 1; attempt++) {
+    for (
+      let attempt = 0;
+      attempt < NEURON_COUNT && connections.length < i + matches + 1;
+      attempt++
+    ) {
       const j = Math.floor(Math.random() * NEURON_COUNT);
       if (j === i) continue;
       const j3 = j * 3;

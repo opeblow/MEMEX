@@ -1,8 +1,8 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
-import { api, ApiError } from "@/lib/api/client";
+import { ApiError, api } from "@/lib/api/client";
 import type { RecallRequest, RecallResponse } from "@memex/types";
+import { useMutation } from "@tanstack/react-query";
 
 export function useRecall() {
   return useMutation({
@@ -32,11 +32,7 @@ export function useStreamingRecall() {
       );
 
       if (!response.ok) {
-        throw new ApiError(
-          response.status,
-          "STREAM_ERROR",
-          "Failed to start streaming recall",
-        );
+        throw new ApiError(response.status, "STREAM_ERROR", "Failed to start streaming recall");
       }
 
       const reader = response.body?.getReader();

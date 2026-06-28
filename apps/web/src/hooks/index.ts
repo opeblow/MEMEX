@@ -40,3 +40,8 @@ export {
   useRecordObservabilityEvent,
   useHandoff,
 } from "./use-agents";
+export {
+  usePerformanceMonitor,
+  useRenderTiming,
+  mark,
+} from "./use-performance-monitor";

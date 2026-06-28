@@ -1,8 +1,8 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { X, Calendar, Tag, FileText, Globe, Trash2, Archive } from "lucide-react";
 import type { MemoryDetail } from "@memex/types";
+import { AnimatePresence, motion } from "framer-motion";
+import { Archive, Calendar, FileText, Globe, Tag, Trash2, X } from "lucide-react";
 
 interface MemoryDetailPanelProps {
   memory: MemoryDetail | null;
@@ -11,7 +11,12 @@ interface MemoryDetailPanelProps {
   onArchive: (id: string) => void;
 }
 
-export function MemoryDetailPanel({ memory, onClose, onDelete, onArchive }: MemoryDetailPanelProps) {
+export function MemoryDetailPanel({
+  memory,
+  onClose,
+  onDelete,
+  onArchive,
+}: MemoryDetailPanelProps) {
   return (
     <AnimatePresence>
       {memory && (
@@ -20,14 +25,18 @@ export function MemoryDetailPanel({ memory, onClose, onDelete, onArchive }: Memo
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: 300 }}
           transition={{ type: "spring", damping: 25, stiffness: 200 }}
-          className="fixed right-0 top-0 h-full w-96 bg-black/90 backdrop-blur-xl border-l border-white/10 z-50 overflow-y-auto"
+          className="fixed right-0 top-0 h-full w-full md:w-96 bg-black/90 backdrop-blur-xl border-l border-white/10 z-50 overflow-y-auto"
         >
           <div className="p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-white truncate pr-4">
                 {memory.title || "Untitled"}
               </h2>
-              <button onClick={onClose} className="text-white/40 hover:text-white transition-colors">
+              <button
+                type="button"
+                onClick={onClose}
+                className="text-white/40 hover:text-white transition-colors"
+              >
                 <X size={18} />
               </button>
             </div>
@@ -93,6 +102,7 @@ export function MemoryDetailPanel({ memory, onClose, onDelete, onArchive }: Memo
 
             <div className="mt-8 flex gap-3">
               <button
+                type="button"
                 onClick={() => onArchive(memory.id)}
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-white/10 text-white/60 hover:text-white hover:border-white/30 transition-all text-sm"
               >
@@ -100,6 +110,7 @@ export function MemoryDetailPanel({ memory, onClose, onDelete, onArchive }: Memo
                 Archive
               </button>
               <button
+                type="button"
                 onClick={() => onDelete(memory.id)}
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-red-500/20 text-red-400 hover:text-red-300 hover:border-red-500/40 transition-all text-sm"
               >

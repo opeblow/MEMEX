@@ -1,7 +1,7 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 
 interface LoaderProps {
   onComplete: () => void;
@@ -34,12 +34,8 @@ export function Loader({ onComplete }: LoaderProps) {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         >
-          <svg
-            width="120"
-            height="120"
-            viewBox="0 0 120 120"
-            className="overflow-visible"
-          >
+          <svg width="120" height="120" viewBox="0 0 120 120" className="overflow-visible">
+            <title>Loading animation</title>
             <defs>
               <radialGradient id="nucleus-glow" cx="50%" cy="50%" r="50%">
                 <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.8" />
@@ -54,12 +50,7 @@ export function Loader({ onComplete }: LoaderProps) {
             </defs>
 
             <circle cx="60" cy="60" r="30" fill="url(#nucleus-glow)">
-              <animate
-                attributeName="r"
-                values="20;35;20"
-                dur="2s"
-                repeatCount="indefinite"
-              />
+              <animate attributeName="r" values="20;35;20" dur="2s" repeatCount="indefinite" />
               <animate
                 attributeName="opacity"
                 values="0.3;0.8;0.3"
@@ -69,18 +60,16 @@ export function Loader({ onComplete }: LoaderProps) {
             </circle>
 
             <circle cx="60" cy="60" r="5" fill="url(#nucleus-core)">
-              <animate
-                attributeName="r"
-                values="3;6;3"
-                dur="2s"
-                repeatCount="indefinite"
-              />
+              <animate attributeName="r" values="3;6;3" dur="2s" repeatCount="indefinite" />
             </circle>
 
             {phase === "nucleus" || phase === "dendrites" || phase === "connections" ? (
               <>
                 <motion.line
-                  x1="60" y1="60" x2="60" y2="15"
+                  x1="60"
+                  y1="60"
+                  x2="60"
+                  y2="15"
                   stroke="#f59e0b"
                   strokeWidth="1"
                   strokeOpacity="0.6"
@@ -93,7 +82,10 @@ export function Loader({ onComplete }: LoaderProps) {
                   transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                 />
                 <motion.line
-                  x1="60" y1="60" x2="105" y2="45"
+                  x1="60"
+                  y1="60"
+                  x2="105"
+                  y2="45"
                   stroke="#22d3ee"
                   strokeWidth="1"
                   strokeOpacity="0.5"
@@ -106,7 +98,10 @@ export function Loader({ onComplete }: LoaderProps) {
                   transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
                 />
                 <motion.line
-                  x1="60" y1="60" x2="15" y2="75"
+                  x1="60"
+                  y1="60"
+                  x2="15"
+                  y2="75"
                   stroke="#f59e0b"
                   strokeWidth="1"
                   strokeOpacity="0.4"
@@ -119,7 +114,10 @@ export function Loader({ onComplete }: LoaderProps) {
                   transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
                 />
                 <motion.line
-                  x1="60" y1="60" x2="90" y2="100"
+                  x1="60"
+                  y1="60"
+                  x2="90"
+                  y2="100"
                   stroke="#22d3ee"
                   strokeWidth="1"
                   strokeOpacity="0.5"
@@ -132,7 +130,10 @@ export function Loader({ onComplete }: LoaderProps) {
                   transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
                 />
                 <motion.line
-                  x1="60" y1="60" x2="30" y2="20"
+                  x1="60"
+                  y1="60"
+                  x2="30"
+                  y2="20"
                   stroke="#22d3ee"
                   strokeWidth="1"
                   strokeOpacity="0.4"
@@ -150,7 +151,10 @@ export function Loader({ onComplete }: LoaderProps) {
             {phase === "connections" ? (
               <>
                 <motion.line
-                  x1="15" y1="75" x2="90" y2="100"
+                  x1="15"
+                  y1="75"
+                  x2="90"
+                  y2="100"
                   stroke="#f59e0b"
                   strokeWidth="0.5"
                   strokeOpacity="0.3"
@@ -159,7 +163,10 @@ export function Loader({ onComplete }: LoaderProps) {
                   transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
                 />
                 <motion.line
-                  x1="105" y1="45" x2="30" y2="20"
+                  x1="105"
+                  y1="45"
+                  x2="30"
+                  y2="20"
                   stroke="#22d3ee"
                   strokeWidth="0.5"
                   strokeOpacity="0.3"
@@ -168,7 +175,10 @@ export function Loader({ onComplete }: LoaderProps) {
                   transition={{ duration: 0.5, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
                 />
                 <motion.line
-                  x1="60" y1="15" x2="105" y2="45"
+                  x1="60"
+                  y1="15"
+                  x2="105"
+                  y2="45"
                   stroke="#f59e0b"
                   strokeWidth="0.5"
                   strokeOpacity="0.25"

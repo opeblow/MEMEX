@@ -1,12 +1,21 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
-  Upload, FileText, ChevronDown, ChevronRight,
-  CheckCircle2, XCircle, Loader2, Globe, Github,
-  Table, Braces, File,
+  Braces,
+  CheckCircle2,
+  ChevronDown,
+  ChevronRight,
+  File,
+  FileText,
+  Github,
+  Globe,
+  Loader2,
+  Table,
+  Upload,
+  XCircle,
 } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -61,7 +70,9 @@ function ImportProgress({ jobId, onComplete }: ImportProgressProps) {
         }
       } catch {}
     };
-    es.onerror = () => { es.close(); };
+    es.onerror = () => {
+      es.close();
+    };
     return () => es.close();
   }, [jobId, onComplete]);
 
@@ -79,9 +90,11 @@ function ImportProgress({ jobId, onComplete }: ImportProgressProps) {
           animate={{ width: `${progress}%` }}
           transition={{ duration: 0.5, ease: "easeOut" }}
           className={`h-full rounded-full ${
-            status === "failed" ? "bg-red-500"
-            : status === "completed" ? "bg-emerald-500"
-            : "bg-purple-500"
+            status === "failed"
+              ? "bg-red-500"
+              : status === "completed"
+                ? "bg-emerald-500"
+                : "bg-purple-500"
           }`}
         />
       </div>
@@ -89,15 +102,22 @@ function ImportProgress({ jobId, onComplete }: ImportProgressProps) {
         {status === "running" && <Loader2 size={12} className="animate-spin text-purple-400" />}
         {status === "completed" && <CheckCircle2 size={12} className="text-emerald-400" />}
         {status === "failed" && <XCircle size={12} className="text-red-400" />}
-        <span className={
-          status === "failed" ? "text-red-400"
-          : status === "completed" ? "text-emerald-400"
-          : "text-white/40"
-        }>
-          {status === "completed" ? "Import complete"
-           : status === "failed" ? "Import failed"
-           : status === "queued" ? "Waiting..."
-           : "Processing..."}
+        <span
+          className={
+            status === "failed"
+              ? "text-red-400"
+              : status === "completed"
+                ? "text-emerald-400"
+                : "text-white/40"
+          }
+        >
+          {status === "completed"
+            ? "Import complete"
+            : status === "failed"
+              ? "Import failed"
+              : status === "queued"
+                ? "Waiting..."
+                : "Processing..."}
         </span>
       </div>
     </div>
@@ -125,10 +145,9 @@ export function ImportPanel({ projectId }: { projectId: string }) {
 
   const refreshJobs = useCallback(async () => {
     try {
-      const res = await fetch(
-        `${API_BASE}/api/v1/memex/imports?project_id=${projectId}&limit=10`,
-        { headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` } },
-      );
+      const res = await fetch(`${API_BASE}/api/v1/memex/imports?project_id=${projectId}&limit=10`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+      });
       if (res.ok) {
         const data = await res.json();
         setJobs(data.jobs || []);
@@ -140,73 +159,88 @@ export function ImportPanel({ projectId }: { projectId: string }) {
     if (projectId) refreshJobs();
   }, [projectId, refreshJobs]);
 
-  const startImport = useCallback(async (sourceType: string, body: Record<string, unknown>) => {
-    setImporting(true);
-    try {
-      const accessToken = localStorage.getItem("access_token");
-      const res = await fetch(`${API_BASE}/api/v1/memex/imports`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-        },
-        body: JSON.stringify({ ...body, project_id: projectId, source_type: sourceType }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setJobs((prev) => [{
-          id: data.job_id,
-          project_id: projectId,
-          source_type: sourceType,
-          status: "queued",
-          progress_pct: 0,
-          total_items: 0,
-          processed_items: 0,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        }, ...prev]);
-      }
-    } catch {}
-    setImporting(false);
-  }, [projectId]);
+  const startImport = useCallback(
+    async (sourceType: string, body: Record<string, unknown>) => {
+      setImporting(true);
+      try {
+        const accessToken = localStorage.getItem("access_token");
+        const res = await fetch(`${API_BASE}/api/v1/memex/imports`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+          },
+          body: JSON.stringify({ ...body, project_id: projectId, source_type: sourceType }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setJobs((prev) => [
+            {
+              id: data.job_id,
+              project_id: projectId,
+              source_type: sourceType,
+              status: "queued",
+              progress_pct: 0,
+              total_items: 0,
+              processed_items: 0,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+            ...prev,
+          ]);
+        }
+      } catch {}
+      setImporting(false);
+    },
+    [projectId],
+  );
 
-  const uploadFile = useCallback(async (file: File) => {
-    setImporting(true);
-    try {
-      const accessToken = localStorage.getItem("access_token");
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("project_id", projectId);
-      formData.append("source_type", detectSourceType(file));
-      const res = await fetch(`${API_BASE}/api/v1/memex/imports/upload`, {
-        method: "POST",
-        ...(accessToken ? { headers: { Authorization: `Bearer ${accessToken}` } } : {}),
-        body: formData,
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setJobs((prev) => [{
-          id: data.job_id,
-          project_id: projectId,
-          source_type: detectSourceType(file),
-          status: "queued",
-          progress_pct: 0,
-          total_items: 0,
-          processed_items: 0,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        }, ...prev]);
-      }
-    } catch {}
-    setImporting(false);
-  }, [projectId]);
+  const uploadFile = useCallback(
+    async (file: File) => {
+      setImporting(true);
+      try {
+        const accessToken = localStorage.getItem("access_token");
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("project_id", projectId);
+        formData.append("source_type", detectSourceType(file));
+        const res = await fetch(`${API_BASE}/api/v1/memex/imports/upload`, {
+          method: "POST",
+          ...(accessToken ? { headers: { Authorization: `Bearer ${accessToken}` } } : {}),
+          body: formData,
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setJobs((prev) => [
+            {
+              id: data.job_id,
+              project_id: projectId,
+              source_type: detectSourceType(file),
+              status: "queued",
+              progress_pct: 0,
+              total_items: 0,
+              processed_items: 0,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+            ...prev,
+          ]);
+        }
+      } catch {}
+      setImporting(false);
+    },
+    [projectId],
+  );
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    const files = Array.from(e.dataTransfer.files);
-    for (const file of files) uploadFile(file);
-  }, [uploadFile]);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragOver(false);
+      const files = Array.from(e.dataTransfer.files);
+      for (const file of files) uploadFile(file);
+    },
+    [uploadFile],
+  );
 
   const handleUrlSubmit = useCallback(() => {
     if (!urlInput.trim()) return;
@@ -222,12 +256,23 @@ export function ImportPanel({ projectId }: { projectId: string }) {
   const activeJob = jobs.find((j) => j.status === "running" || j.status === "queued");
 
   return (
-    <div className="space-y-4">
+    <section className="space-y-4" aria-label="Import memories">
       <div
-        onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setIsDragOver(true);
+        }}
         onDragLeave={() => setIsDragOver(false)}
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            fileInputRef.current?.click();
+          }
+        }}
+        aria-label="File upload area"
+        aria-describedby="import-instructions"
         className={`relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
           isDragOver
             ? "border-purple-500 bg-purple-500/10 scale-[1.02]"
@@ -251,13 +296,11 @@ export function ImportPanel({ projectId }: { projectId: string }) {
           <div className={`p-3 rounded-full ${isDragOver ? "bg-purple-500/20" : "bg-white/5"}`}>
             <Upload size={24} className={isDragOver ? "text-purple-400" : "text-white/30"} />
           </div>
-          <div>
+          <div id="import-instructions">
             <p className="text-sm text-white/60">
               {isDragOver ? "Drop to import" : "Drop files here or click to browse"}
             </p>
-            <p className="text-xs text-white/30 mt-1">
-              Markdown, PDF, CSV, JSON, Plain Text
-            </p>
+            <p className="text-xs text-white/30 mt-1">Markdown, PDF, CSV, JSON, Plain Text</p>
           </div>
         </motion.div>
         {importing && (
@@ -276,6 +319,7 @@ export function ImportPanel({ projectId }: { projectId: string }) {
 
       <div className="flex gap-2 flex-wrap">
         <button
+          type="button"
           onClick={() => setShowUrlInput(!showUrlInput)}
           className="flex items-center gap-2 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-xs text-white/60 hover:text-white/80 hover:bg-white/10 transition-colors"
         >
@@ -283,7 +327,13 @@ export function ImportPanel({ projectId }: { projectId: string }) {
           Import from URL
         </button>
         <button
-          onClick={() => startImport("markdown", { data: "# New Memory\n\nContent here...", display_name: "Quick Note" })}
+          type="button"
+          onClick={() =>
+            startImport("markdown", {
+              data: "# New Memory\n\nContent here...",
+              display_name: "Quick Note",
+            })
+          }
           className="flex items-center gap-2 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-xs text-white/60 hover:text-white/80 hover:bg-white/10 transition-colors"
         >
           <FileText size={14} />
@@ -308,6 +358,7 @@ export function ImportPanel({ projectId }: { projectId: string }) {
               className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/60 focus:outline-none focus:border-purple-500/50 placeholder-white/20"
             />
             <button
+              type="button"
               onClick={handleUrlSubmit}
               disabled={!urlInput.trim() || importing}
               className="px-3 py-2 bg-purple-500/20 border border-purple-500/30 rounded-lg text-xs text-purple-400 hover:bg-purple-500/30 disabled:opacity-30 transition-colors"
@@ -322,6 +373,7 @@ export function ImportPanel({ projectId }: { projectId: string }) {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
+          aria-live="polite"
           className="p-4 bg-white/5 border border-white/10 rounded-xl"
         >
           <div className="flex items-center gap-2 mb-2">
@@ -330,16 +382,14 @@ export function ImportPanel({ projectId }: { projectId: string }) {
               {SOURCE_LABELS[activeJob.source_type] || activeJob.source_type}
             </span>
           </div>
-          <ImportProgress
-            jobId={activeJob.id}
-            onComplete={refreshJobs}
-          />
+          <ImportProgress jobId={activeJob.id} onComplete={refreshJobs} />
         </motion.div>
       )}
 
       {jobs.length > 0 && (
         <div>
           <button
+            type="button"
             onClick={() => setImportsOpen(!importsOpen)}
             className="flex items-center gap-2 text-xs text-white/40 hover:text-white/60 transition-colors"
           >
@@ -364,17 +414,26 @@ export function ImportPanel({ projectId }: { projectId: string }) {
                       {SOURCE_LABELS[job.source_type] || job.source_type}
                       {job.processed_items > 0 && ` (${job.processed_items})`}
                     </span>
-                    <span className={`text-xs ${
-                      job.status === "completed" ? "text-emerald-400"
-                      : job.status === "failed" ? "text-red-400"
-                      : job.status === "running" ? "text-purple-400"
-                      : "text-white/30"
-                    }`}>
+                    <span
+                      className={`text-xs ${
+                        job.status === "completed"
+                          ? "text-emerald-400"
+                          : job.status === "failed"
+                            ? "text-red-400"
+                            : job.status === "running"
+                              ? "text-purple-400"
+                              : "text-white/30"
+                      }`}
+                    >
                       {job.progress_pct}%
                     </span>
-                    {job.status === "completed" && <CheckCircle2 size={12} className="text-emerald-400" />}
+                    {job.status === "completed" && (
+                      <CheckCircle2 size={12} className="text-emerald-400" />
+                    )}
                     {job.status === "failed" && <XCircle size={12} className="text-red-400" />}
-                    {job.status === "running" && <Loader2 size={12} className="animate-spin text-purple-400" />}
+                    {job.status === "running" && (
+                      <Loader2 size={12} className="animate-spin text-purple-400" />
+                    )}
                   </div>
                 ))}
               </motion.div>
@@ -382,7 +441,7 @@ export function ImportPanel({ projectId }: { projectId: string }) {
           </AnimatePresence>
         </div>
       )}
-    </div>
+    </section>
   );
 }
 

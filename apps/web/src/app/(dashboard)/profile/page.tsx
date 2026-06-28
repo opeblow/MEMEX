@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import { getProfile, updateProfile } from "@/lib/auth";
+import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<{
@@ -86,6 +86,7 @@ export default function ProfilePage() {
         </label>
 
         <button
+          type="button"
           onClick={handleSave}
           disabled={saving || name === profile?.display_name}
           className="h-10 rounded-lg bg-amber-500 px-5 text-sm font-medium text-black transition-all hover:bg-amber-400 disabled:opacity-50"

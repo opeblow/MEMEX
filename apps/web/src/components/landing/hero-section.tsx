@@ -1,14 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
 import { useReducedMotion } from "@memex/hooks";
+import { motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 
-const LINES = [
-  "THE OPERATING SYSTEM",
-  "FOR",
-  "ARTIFICIAL MEMORY",
-];
+const LINES = ["THE OPERATING SYSTEM", "FOR", "ARTIFICIAL MEMORY"];
 
 export function HeroSection() {
   const reducedMotion = useReducedMotion();
@@ -28,14 +24,11 @@ export function HeroSection() {
       <div className="relative px-6 text-center">
         <h1 className="flex flex-col items-center gap-2 md:gap-4">
           {LINES.map((line, lineIdx) => (
-            <span
-              key={lineIdx}
-              className="block overflow-hidden"
-            >
+            <span key={line} className="block overflow-hidden">
               <span className="flex flex-wrap justify-center">
                 {line.split("").map((char, charIdx) => (
                   <motion.span
-                    key={charIdx}
+                    key={`${line}-${char}`}
                     className="inline-block font-bold tracking-tighter text-white"
                     style={{
                       fontSize: "clamp(2.5rem, 12vw, 8rem)",
@@ -48,9 +41,7 @@ export function HeroSection() {
                         : { opacity: 0, scale: 0.4, filter: "blur(12px)", y: 30 }
                     }
                     animate={
-                      startAnimation
-                        ? { opacity: 1, scale: 1, filter: "blur(0px)", y: 0 }
-                        : {}
+                      startAnimation ? { opacity: 1, scale: 1, filter: "blur(0px)", y: 0 } : {}
                     }
                     transition={{
                       delay: lineIdx * 0.3 + charIdx * 0.025,
@@ -85,7 +76,7 @@ export function HeroSection() {
           <motion.div
             className="h-12 w-px bg-gradient-to-b from-amber-500/60 to-transparent"
             animate={{ opacity: [0.3, 0.8, 0.3] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
           />
         </motion.div>
       </div>

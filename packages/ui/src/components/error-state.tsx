@@ -1,6 +1,6 @@
 import { AlertTriangle } from "lucide-react";
-import { Button } from "./button";
 import { cn } from "../lib/cn";
+import { Button } from "./button";
 
 interface ErrorStateProps {
   title?: string;
@@ -17,10 +17,7 @@ export function ErrorState({
 }: ErrorStateProps) {
   return (
     <div
-      className={cn(
-        "flex flex-col items-center justify-center gap-3 py-16 text-center",
-        className,
-      )}
+      className={cn("flex flex-col items-center justify-center gap-3 py-16 text-center", className)}
     >
       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10">
         <AlertTriangle className="h-5 w-5 text-red-400" />

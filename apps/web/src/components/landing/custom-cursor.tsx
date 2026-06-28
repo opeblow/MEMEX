@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
 import { motion, useMotionValue, useSpring } from "framer-motion";
+import { useCallback, useEffect, useRef } from "react";
 
 export function CustomCursor() {
   const cursorX = useMotionValue(-200);
@@ -21,11 +21,7 @@ export function CustomCursor() {
 
   const handleMouseOver = useCallback((e: MouseEvent) => {
     const target = e.target as HTMLElement;
-    if (
-      target.closest("a") ||
-      target.closest("button") ||
-      target.closest("[data-cursor-hover]")
-    ) {
+    if (target.closest("a") || target.closest("button") || target.closest("[data-cursor-hover]")) {
       isHovering.current = true;
       document.documentElement.style.setProperty("--cursor-scale", "1.5");
     }

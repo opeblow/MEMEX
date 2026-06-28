@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
+import { useMemo, useRef } from "react";
 import * as THREE from "three";
 
 export function GalaxyBackground() {
@@ -54,12 +54,7 @@ export function GalaxyBackground() {
           array={colors}
           itemSize={3}
         />
-        <bufferAttribute
-          attach="attributes-size"
-          count={sizes.length}
-          array={sizes}
-          itemSize={1}
-        />
+        <bufferAttribute attach="attributes-size" count={sizes.length} array={sizes} itemSize={1} />
       </bufferGeometry>
       <pointsMaterial
         size={0.05}

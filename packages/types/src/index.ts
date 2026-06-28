@@ -1,7 +1,17 @@
 export type MemoryType =
-  | "text" | "file" | "code" | "image" | "audio" | "video"
-  | "url" | "conversation" | "meeting_note" | "github_issue"
-  | "support_ticket" | "research" | "decision";
+  | "text"
+  | "file"
+  | "code"
+  | "image"
+  | "audio"
+  | "video"
+  | "url"
+  | "conversation"
+  | "meeting_note"
+  | "github_issue"
+  | "support_ticket"
+  | "research"
+  | "decision";
 
 export type MemoryStatus = "processing" | "indexed" | "failed" | "deleted" | "archived";
 
@@ -59,8 +69,15 @@ export interface MemoryDetail {
 }
 
 export type QueryType =
-  | "graph_completion" | "rag_completion" | "hybrid_completion"
-  | "chunks" | "summaries" | "temporal" | "cypher" | "feeling_lucky" | null;
+  | "graph_completion"
+  | "rag_completion"
+  | "hybrid_completion"
+  | "chunks"
+  | "summaries"
+  | "temporal"
+  | "cypher"
+  | "feeling_lucky"
+  | null;
 
 export interface RecallRequest {
   query: string;
@@ -267,7 +284,10 @@ export interface MemoryTimeline {
 }
 
 export interface AIService {
-  complete(prompt: string, options?: { systemPrompt?: string; maxTokens?: number; temperature?: number }): Promise<string>;
+  complete(
+    prompt: string,
+    options?: { systemPrompt?: string; maxTokens?: number; temperature?: number },
+  ): Promise<string>;
   embed(texts: string[]): Promise<number[][]>;
   summarize(text: string, maxLength?: number): Promise<string>;
 }

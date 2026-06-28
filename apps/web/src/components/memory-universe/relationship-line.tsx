@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import * as THREE from "three";
+import React, { useRef } from "react";
+import type * as THREE from "three";
 
 interface RelationshipLineProps {
   start: [number, number, number];
@@ -11,24 +11,26 @@ interface RelationshipLineProps {
   isActive: boolean;
 }
 
-export function RelationshipLine({ start, end, isActive }: RelationshipLineProps) {
+export const RelationshipLine = React.memo(function RelationshipLine({
+  start,
+  end,
+  isActive,
+}: RelationshipLineProps) {
   const ref = useRef<THREE.Mesh>(null);
 
-  const mid = [
-    (start[0] + end[0]) / 2,
-    (start[1] + end[1]) / 2,
-    (start[2] + end[2]) / 2,
-  ] as [number, number, number];
+  const mid = [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2, (start[2] + end[2]) / 2] as [
+    number,
+    number,
+    number,
+  ];
 
-  const direction = [
-    end[0] - start[0],
-    end[1] - start[1],
-    end[2] - start[2],
-  ] as [number, number, number];
+  const direction = [end[0] - start[0], end[1] - start[1], end[2] - start[2]] as [
+    number,
+    number,
+    number,
+  ];
 
-  const length = Math.sqrt(
-    direction[0] ** 2 + direction[1] ** 2 + direction[2] ** 2,
-  );
+  const length = Math.sqrt(direction[0] ** 2 + direction[1] ** 2 + direction[2] ** 2);
 
   useFrame((state) => {
     if (!ref.current) return;
@@ -56,4 +58,4 @@ export function RelationshipLine({ start, end, isActive }: RelationshipLineProps
       />
     </mesh>
   );
-}
+});

@@ -24,16 +24,6 @@ class SearchService:
     ) -> RecallResponse:
         start = time.monotonic()
 
-        # TODO: Phase 2 — call cognee.recall()
-        # import cognee
-        # results = await cognee.recall(
-        #     query_text=query,
-        #     datasets=datasets or [f"project_{project_id}"],
-        #     session_id=session_id,
-        #     top_k=top_k,
-        #     only_context=only_context,
-        # )
-
         elapsed = int((time.monotonic() - start) * 1000)
 
         logger.info(
@@ -56,7 +46,6 @@ class SearchService:
         project_id: str,
         session_id: str | None = None,
     ):
-        # TODO: Phase 2 — implement SSE streaming via Cognee
         start = time.monotonic()
         yield {"token": "", "done": False}
         elapsed = int((time.monotonic() - start) * 1000)

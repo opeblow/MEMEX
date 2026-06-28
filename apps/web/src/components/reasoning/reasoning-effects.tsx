@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef, useMemo } from "react";
-import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
+import { useMemo, useRef } from "react";
+import * as THREE from "three";
 
 interface ReasoningTrailProps {
   memoryPositions: [number, number, number][];

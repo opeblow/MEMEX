@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import dynamic from "next/dynamic";
 import { Loader } from "@/components/landing/loader";
+import dynamic from "next/dynamic";
+import { useCallback, useState } from "react";
 
 const NeuralBackground = dynamic(
-  () => import("@/components/landing/neural-background").then((m) => ({ default: m.NeuralBackground })),
+  () =>
+    import("@/components/landing/neural-background").then((m) => ({ default: m.NeuralBackground })),
   { ssr: false },
 );
 

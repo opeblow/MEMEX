@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useCallback, Suspense } from "react";
+import type { MemoryDetail } from "@memex/types";
+import { ContactShadows, Environment, Stars } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
-import { Stars, Environment, ContactShadows } from "@react-three/drei";
+import { Suspense, useCallback, useState } from "react";
+import { GalaxyBackground } from "./galaxy-background";
 import { MemoryConstellation } from "./memory-constellation";
 import { MemoryDetailPanel } from "./memory-detail-panel";
 import { UniverseControls } from "./universe-controls";
-import { GalaxyBackground } from "./galaxy-background";
-import type { MemoryDetail } from "@memex/types";
 
 interface MemoryUniverseProps {
   memories: MemoryDetail[];
@@ -46,8 +46,8 @@ export function MemoryUniverse({ memories, onDelete, onArchive }: MemoryUniverse
   );
 
   return (
-    <div className="relative w-full h-full">
-      <div className="absolute inset-0">
+    <div className="relative w-full min-h-[60vh] md:min-h-screen">
+      <div className="absolute inset-0" role="img" aria-label="3D memory universe visualization">
         <Canvas
           camera={{ position: [0, 0, 8], fov: 60, near: 0.1, far: 100 }}
           dpr={[1, 2]}

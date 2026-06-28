@@ -1,12 +1,23 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
-import type { ImportJob, ImportJobListResponse, ImportResponse, Source, SourceListResponse } from "@memex/types";
+import type {
+  ImportJob,
+  ImportJobListResponse,
+  ImportResponse,
+  Source,
+  SourceListResponse,
+} from "@memex/types";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export function useImport(projectId: string) {
   return useMutation({
-    mutationFn: async (data: { source_type: string; data?: string; url?: string; display_name?: string }) => {
+    mutationFn: async (data: {
+      source_type: string;
+      data?: string;
+      url?: string;
+      display_name?: string;
+    }) => {
       return api.post<ImportResponse>("/api/v1/memex/imports", {
         project_id: projectId,
         ...data,
@@ -18,7 +29,11 @@ export function useImport(projectId: string) {
 export function useUploadImport() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ file, projectId, sourceType }: { file: File; projectId: string; sourceType: string }) => {
+    mutationFn: async ({
+      file,
+      projectId,
+      sourceType,
+    }: { file: File; projectId: string; sourceType: string }) => {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("project_id", projectId);
@@ -52,7 +67,9 @@ export function useImportJobs(projectId: string, limit = 20) {
     refetchInterval: (query) => {
       const data = query.state.data;
       if (!data) return 3000;
-      const hasActive = data.jobs.some((j: ImportJob) => j.status === "running" || j.status === "queued");
+      const hasActive = data.jobs.some(
+        (j: ImportJob) => j.status === "running" || j.status === "queued",
+      );
       return hasActive ? 2000 : false;
     },
   });
@@ -74,9 +91,7 @@ export function useSources(projectId: string, limit = 50) {
   return useQuery({
     queryKey: ["sources", projectId, limit],
     queryFn: () =>
-      api.get<SourceListResponse>(
-        `/api/v1/memex/sources?project_id=${projectId}&limit=${limit}`,
-      ),
+      api.get<SourceListResponse>(`/api/v1/memex/sources?project_id=${projectId}&limit=${limit}`),
     enabled: !!projectId,
   });
 }
@@ -84,8 +99,7 @@ export function useSources(projectId: string, limit = 50) {
 export function useSource(sourceId: string | null) {
   return useQuery({
     queryKey: ["source", sourceId],
-    queryFn: () =>
-      api.get<Source>(`/api/v1/memex/sources/${sourceId}`),
+    queryFn: () => api.get<Source>(`/api/v1/memex/sources/${sourceId}`),
     enabled: !!sourceId,
   });
 }
@@ -93,8 +107,7 @@ export function useSource(sourceId: string | null) {
 export function useSourceMemories(sourceId: string | null) {
   return useQuery({
     queryKey: ["sourceMemories", sourceId],
-    queryFn: () =>
-      api.get(`/api/v1/memex/sources/${sourceId}/memories`),
+    queryFn: () => api.get(`/api/v1/memex/sources/${sourceId}/memories`),
     enabled: !!sourceId,
   });
 }

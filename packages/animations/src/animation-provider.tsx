@@ -1,12 +1,7 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useMemo,
-  type ReactNode,
-} from "react";
 import { Lenis as ReactLenis } from "lenis/react";
+import { type ReactNode, createContext, useContext, useMemo } from "react";
 
 interface AnimationContextValue {
   reducedMotion: boolean;
@@ -29,23 +24,19 @@ interface AnimationProviderProps {
   reducedMotion?: boolean;
 }
 
-export function AnimationProvider({
-  children,
-  reducedMotion = false,
-}: AnimationProviderProps) {
+export function AnimationProvider({ children, reducedMotion = false }: AnimationProviderProps) {
   const value = useMemo(() => ({ reducedMotion }), [reducedMotion]);
 
   if (reducedMotion) {
-    return (
-      <AnimationContext.Provider value={value}>
-        {children}
-      </AnimationContext.Provider>
-    );
+    return <AnimationContext.Provider value={value}>{children}</AnimationContext.Provider>;
   }
 
   return (
     <AnimationContext.Provider value={value}>
-      <ReactLenis root options={{ duration: 1.2, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) }}>
+      <ReactLenis
+        root
+        options={{ duration: 1.2, easing: (t) => Math.min(1, 1.001 - 2 ** (-10 * t)) }}
+      >
         {children}
       </ReactLenis>
     </AnimationContext.Provider>

@@ -1,11 +1,11 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { AnimationProvider } from "@memex/animations";
 import { useReducedMotion } from "@memex/hooks";
 import { TooltipProvider } from "@radix-ui/react-tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import type { ReactNode } from "react";
 
 let queryClient: QueryClient;
 
@@ -37,9 +37,7 @@ function ProvidersInner({ children }: ProvidersProps) {
 
   return (
     <AnimationProvider reducedMotion={reducedMotion}>
-      <TooltipProvider delayDuration={300}>
-        {children}
-      </TooltipProvider>
+      <TooltipProvider delayDuration={300}>{children}</TooltipProvider>
     </AnimationProvider>
   );
 }
@@ -47,9 +45,7 @@ function ProvidersInner({ children }: ProvidersProps) {
 export function Providers({ children }: ProvidersProps) {
   return (
     <QueryClientProvider client={getQueryClient()}>
-      <ProvidersInner>
-        {children}
-      </ProvidersInner>
+      <ProvidersInner>{children}</ProvidersInner>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );

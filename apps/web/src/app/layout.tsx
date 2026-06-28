@@ -26,14 +26,12 @@ export const metadata: Metadata = {
     url: "https://memex.sh",
     siteName: "MEMEX",
     title: "MEMEX — The Operating System for Artificial Memory",
-    description:
-      "Store, recall, improve, and visualize AI memory forever.",
+    description: "Store, recall, improve, and visualize AI memory forever.",
   },
   twitter: {
     card: "summary_large_image",
     title: "MEMEX — The Operating System for Artificial Memory",
-    description:
-      "Store, recall, improve, and visualize AI memory forever.",
+    description: "Store, recall, improve, and visualize AI memory forever.",
   },
   robots: {
     index: true,
@@ -48,6 +46,7 @@ export const viewport: Viewport = {
   themeColor: "#000000",
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({

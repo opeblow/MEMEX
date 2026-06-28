@@ -1,20 +1,40 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { PageSkeleton } from "@/components/ui/loading-skeleton";
 import {
-  Bot, Plus, Trash2, Play, Activity,
-  ChevronDown, ChevronRight, Loader2, Brain, Users, Lock, Globe,
-  GitBranch,
-} from "lucide-react";
-import type {
-  Agent, Workflow as WorkflowType, TaskExecution, Decision, ObservabilityEvent,
-} from "@memex/types";
-import {
-  useAgents, useCreateAgent, useUpdateAgent, useDeleteAgent,
-  useWorkflows, useAgentTasks,
-  useAgentDecisions, useObservabilityEvents,
+  useAgentDecisions,
+  useAgentTasks,
+  useAgents,
+  useCreateAgent,
+  useDeleteAgent,
+  useObservabilityEvents,
+  useUpdateAgent,
+  useWorkflows,
 } from "@/hooks";
+import type {
+  Agent,
+  Decision,
+  ObservabilityEvent,
+  TaskExecution,
+  Workflow as WorkflowType,
+} from "@memex/types";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  Activity,
+  Bot,
+  Brain,
+  ChevronDown,
+  ChevronRight,
+  GitBranch,
+  Globe,
+  Loader2,
+  Lock,
+  Play,
+  Plus,
+  Trash2,
+  Users,
+} from "lucide-react";
+import { useEffect, useState } from "react";
 
 const SCOPE_ICONS: Record<string, React.ReactNode> = {
   private: <Lock size={12} />,
@@ -62,7 +82,10 @@ function CreateAgentModal({
       agent_type: agentType,
       memory_scope: memoryScope,
       capabilities: capabilitiesText
-        ? capabilitiesText.split(",").map((s) => s.trim()).filter(Boolean)
+        ? capabilitiesText
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
         : undefined,
     });
     setName("");
@@ -136,17 +159,23 @@ function CreateAgentModal({
           />
           <div className="flex gap-2 pt-2">
             <button
+              type="button"
               onClick={onClose}
               className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-xs text-white/60 hover:bg-white/10 transition-colors"
             >
               Cancel
             </button>
             <button
+              type="button"
               onClick={handleSubmit}
               disabled={!name.trim() || createAgent.isPending}
               className="flex-1 px-3 py-2 bg-purple-500/20 border border-purple-500/30 rounded-lg text-xs text-purple-400 hover:bg-purple-500/30 disabled:opacity-30 transition-colors flex items-center justify-center gap-2"
             >
-              {createAgent.isPending ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
+              {createAgent.isPending ? (
+                <Loader2 size={12} className="animate-spin" />
+              ) : (
+                <Plus size={12} />
+              )}
               Create
             </button>
           </div>
@@ -162,10 +191,7 @@ function AgentCard({ agent, projectId }: { agent: Agent; projectId: string }) {
   const deleteAgent = useDeleteAgent();
   const { data: tasksData } = useAgentTasks(expanded ? agent.id : null, 10);
   const { data: decisionsData } = useAgentDecisions(expanded ? agent.id : null, 10);
-  const { data: eventsData } = useObservabilityEvents(
-    projectId,
-    expanded ? agent.id : undefined,
-  );
+  const { data: eventsData } = useObservabilityEvents(projectId, expanded ? agent.id : undefined);
 
   const tasks = tasksData?.tasks || [];
   const decisions = decisionsData?.decisions || [];
@@ -183,9 +209,16 @@ function AgentCard({ agent, projectId }: { agent: Agent; projectId: string }) {
       layout
       className="bg-white/[0.02] border border-white/10 rounded-xl overflow-hidden"
     >
-      <div
+      <button
+        type="button"
         onClick={() => setExpanded(!expanded)}
-        className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/[0.02] transition-colors"
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setExpanded(!expanded);
+          }
+        }}
+        className="flex w-full items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/[0.02] transition-colors bg-transparent border-none text-left"
       >
         <div className="p-1.5 rounded-lg bg-purple-500/10">
           <Bot size={14} className="text-purple-400" />
@@ -193,7 +226,9 @@ function AgentCard({ agent, projectId }: { agent: Agent; projectId: string }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-sm text-white/80 truncate">{agent.name}</span>
-            <span className={`px-1.5 py-0.5 rounded text-[10px] ${STATUS_COLORS[agent.status] || "text-white/30 bg-white/5"}`}>
+            <span
+              className={`px-1.5 py-0.5 rounded text-[10px] ${STATUS_COLORS[agent.status] || "text-white/30 bg-white/5"}`}
+            >
               {agent.status}
             </span>
             <span className="text-[10px] text-white/30">{agent.agent_type}</span>
@@ -209,12 +244,17 @@ function AgentCard({ agent, projectId }: { agent: Agent; projectId: string }) {
             {agent.capabilities && agent.capabilities.length > 0 && (
               <div className="flex gap-1 flex-wrap">
                 {agent.capabilities.slice(0, 3).map((cap) => (
-                  <span key={cap} className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-white/40">
+                  <span
+                    key={cap}
+                    className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-white/40"
+                  >
                     {cap}
                   </span>
                 ))}
                 {agent.capabilities.length > 3 && (
-                  <span className="text-[10px] text-white/20">+{agent.capabilities.length - 3}</span>
+                  <span className="text-[10px] text-white/20">
+                    +{agent.capabilities.length - 3}
+                  </span>
                 )}
               </div>
             )}
@@ -222,22 +262,34 @@ function AgentCard({ agent, projectId }: { agent: Agent; projectId: string }) {
         </div>
         <div className="flex items-center gap-1">
           <button
-            onClick={(e) => { e.stopPropagation(); toggleStatus(); }}
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleStatus();
+            }}
             className="p-1.5 rounded-lg hover:bg-white/5 text-white/30 hover:text-white/60 transition-colors"
             title={agent.status === "active" ? "Pause" : "Activate"}
           >
             <Play size={12} />
           </button>
           <button
-            onClick={(e) => { e.stopPropagation(); deleteAgent.mutate(agent.id); }}
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              deleteAgent.mutate(agent.id);
+            }}
             className="p-1.5 rounded-lg hover:bg-white/5 text-white/30 hover:text-red-400 transition-colors"
             title="Delete"
           >
             <Trash2 size={12} />
           </button>
-          {expanded ? <ChevronDown size={12} className="text-white/30" /> : <ChevronRight size={12} className="text-white/30" />}
+          {expanded ? (
+            <ChevronDown size={12} className="text-white/30" />
+          ) : (
+            <ChevronRight size={12} className="text-white/30" />
+          )}
         </div>
-      </div>
+      </button>
 
       <AnimatePresence>
         {expanded && (
@@ -247,7 +299,7 @@ function AgentCard({ agent, projectId }: { agent: Agent; projectId: string }) {
             exit={{ height: 0, opacity: 0 }}
             className="border-t border-white/5"
           >
-            <div className="grid grid-cols-3 gap-px bg-white/5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-white/5">
               <div className="p-3 bg-[#0a0a0f]">
                 <div className="flex items-center gap-1.5 text-[10px] text-white/30 mb-2">
                   <GitBranch size={10} /> Tasks ({tasks.length})
@@ -256,12 +308,17 @@ function AgentCard({ agent, projectId }: { agent: Agent; projectId: string }) {
                   {tasks.length === 0 && <p className="text-[10px] text-white/20">No tasks</p>}
                   {tasks.map((t: TaskExecution) => (
                     <div key={t.id} className="flex items-center gap-2 text-[10px]">
-                      <span className={`w-1.5 h-1.5 rounded-full ${
-                        t.status === "completed" ? "bg-emerald-500"
-                        : t.status === "failed" ? "bg-red-500"
-                        : t.status === "running" ? "bg-purple-500"
-                        : "bg-white/20"
-                      }`} />
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          t.status === "completed"
+                            ? "bg-emerald-500"
+                            : t.status === "failed"
+                              ? "bg-red-500"
+                              : t.status === "running"
+                                ? "bg-purple-500"
+                                : "bg-white/20"
+                        }`}
+                      />
                       <span className="text-white/50 truncate flex-1">{t.name}</span>
                       {t.duration_ms && <span className="text-white/20">{t.duration_ms}ms</span>}
                     </div>
@@ -273,12 +330,16 @@ function AgentCard({ agent, projectId }: { agent: Agent; projectId: string }) {
                   <Brain size={10} /> Decisions ({decisions.length})
                 </div>
                 <div className="space-y-1">
-                  {decisions.length === 0 && <p className="text-[10px] text-white/20">No decisions</p>}
+                  {decisions.length === 0 && (
+                    <p className="text-[10px] text-white/20">No decisions</p>
+                  )}
                   {decisions.map((d: Decision) => (
                     <div key={d.id} className="flex items-center gap-2 text-[10px]">
                       <span className="text-white/40 truncate flex-1">{d.decision_type}</span>
                       {d.confidence != null && (
-                        <span className={`${d.confidence > 0.7 ? "text-emerald-400" : d.confidence > 0.4 ? "text-yellow-400" : "text-red-400"}`}>
+                        <span
+                          className={`${d.confidence > 0.7 ? "text-emerald-400" : d.confidence > 0.4 ? "text-yellow-400" : "text-red-400"}`}
+                        >
                           {(d.confidence * 100).toFixed(0)}%
                         </span>
                       )}
@@ -294,11 +355,15 @@ function AgentCard({ agent, projectId }: { agent: Agent; projectId: string }) {
                   {events.length === 0 && <p className="text-[10px] text-white/20">No events</p>}
                   {events.slice(0, 5).map((e: ObservabilityEvent) => (
                     <div key={e.id} className="flex items-center gap-2 text-[10px]">
-                      <span className={`w-1.5 h-1.5 rounded-full ${
-                        e.level === "error" ? "bg-red-500"
-                        : e.level === "warn" ? "bg-yellow-500"
-                        : "bg-white/20"
-                      }`} />
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          e.level === "error"
+                            ? "bg-red-500"
+                            : e.level === "warn"
+                              ? "bg-yellow-500"
+                              : "bg-white/20"
+                        }`}
+                      />
                       <span className="text-white/50 truncate flex-1">{e.event_name}</span>
                     </div>
                   ))}
@@ -316,18 +381,28 @@ export default function AgentsPage() {
   const [projectId, setProjectId] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [filterScope, setFilterScope] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const stored = localStorage.getItem("memex_active_project");
     if (stored) {
-      try { setProjectId(JSON.parse(stored).id || stored); } catch { setProjectId(stored); }
+      try {
+        setProjectId(JSON.parse(stored).id || stored);
+      } catch {
+        setProjectId(stored);
+      }
     }
+    setTimeout(() => setIsLoading(false), 200);
   }, []);
 
   const { data: agentsData } = useAgents(projectId);
   const { data: workflowsData } = useWorkflows(projectId);
   const agents = agentsData?.agents || [];
   const workflows = workflowsData?.workflows || [];
+
+  if (isLoading && !projectId) {
+    return <PageSkeleton />;
+  }
 
   const filteredAgents = filterScope
     ? agents.filter((a: Agent) => a.memory_scope === filterScope)
@@ -356,6 +431,7 @@ export default function AgentsPage() {
           </p>
         </div>
         <button
+          type="button"
           onClick={() => setShowCreate(true)}
           className="flex items-center gap-2 px-3 py-2 bg-purple-500/20 border border-purple-500/30 rounded-lg text-xs text-purple-400 hover:bg-purple-500/30 transition-colors"
         >
@@ -368,6 +444,7 @@ export default function AgentsPage() {
         {["", "private", "workspace", "team", "global"].map((scope) => (
           <button
             key={scope}
+            type="button"
             onClick={() => setFilterScope(scope === filterScope ? "" : scope)}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs border transition-colors ${
               filterScope === scope
@@ -375,7 +452,13 @@ export default function AgentsPage() {
                 : "bg-white/5 border-white/10 text-white/40 hover:text-white/60"
             }`}
           >
-            {scope ? <>{SCOPE_ICONS[scope]} {scope}</> : "All"}
+            {scope ? (
+              <>
+                {SCOPE_ICONS[scope]} {scope}
+              </>
+            ) : (
+              "All"
+            )}
           </button>
         ))}
       </div>
@@ -383,7 +466,9 @@ export default function AgentsPage() {
       <div className="space-y-2">
         {filteredAgents.length === 0 && (
           <p className="text-xs text-white/20 text-center py-8">
-            {agents.length === 0 ? "No agents yet. Create your first agent." : "No agents match the selected scope."}
+            {agents.length === 0
+              ? "No agents yet. Create your first agent."
+              : "No agents match the selected scope."}
           </p>
         )}
         {filteredAgents.map((agent: Agent) => (
@@ -397,9 +482,7 @@ export default function AgentsPage() {
           Recent Workflows ({workflows.length})
         </h2>
         <div className="space-y-1">
-          {workflows.length === 0 && (
-            <p className="text-xs text-white/20">No workflows yet</p>
-          )}
+          {workflows.length === 0 && <p className="text-xs text-white/20">No workflows yet</p>}
           {workflows.slice(0, 10).map((wf: WorkflowType) => (
             <div
               key={wf.id}

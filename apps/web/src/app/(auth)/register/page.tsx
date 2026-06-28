@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { motion } from "framer-motion";
 import { registerWithEmail } from "@/lib/auth";
+import { motion } from "framer-motion";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -50,7 +50,7 @@ export default function RegisterPage() {
               "0 0 20px rgba(34,211,238,0.3), 0 0 40px rgba(34,211,238,0.1)",
             ],
           }}
-          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
         >
           <div className="h-full w-full rounded-full bg-gradient-to-br from-cyan-400 to-cyan-600" />
         </motion.div>

@@ -1,20 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
 import { createWorkspace, markOnboarded } from "@/lib/auth";
+import { AnimatePresence, motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 
 type Phase = "awakening" | "workspace" | "complete";
 
-const GOALS = [
-  "Build products",
-  "Research",
-  "Engineering",
-  "AI Agents",
-  "Knowledge Base",
-  "Other",
-];
+const GOALS = ["Build products", "Research", "Engineering", "AI Agents", "Knowledge Base", "Other"];
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -81,6 +74,7 @@ export default function OnboardingPage() {
             transition={{ duration: 0.5 }}
           >
             <svg width="160" height="160" viewBox="0 0 160 160" className="mb-8 overflow-visible">
+              <title>Neural network animation</title>
               <defs>
                 <radialGradient id="awake-glow">
                   <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.6" />
@@ -97,33 +91,63 @@ export default function OnboardingPage() {
               {awakeningStep >= 1 && (
                 <>
                   <motion.line
-                    x1="80" y1="80" x2="80" y2="25"
-                    stroke="#f59e0b" strokeWidth="1.5" strokeOpacity="0.5"
-                    initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
+                    x1="80"
+                    y1="80"
+                    x2="80"
+                    y2="25"
+                    stroke="#f59e0b"
+                    strokeWidth="1.5"
+                    strokeOpacity="0.5"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
                     transition={{ duration: 0.6 }}
                   />
                   <motion.line
-                    x1="80" y1="80" x2="135" y2="60"
-                    stroke="#22d3ee" strokeWidth="1.5" strokeOpacity="0.4"
-                    initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
+                    x1="80"
+                    y1="80"
+                    x2="135"
+                    y2="60"
+                    stroke="#22d3ee"
+                    strokeWidth="1.5"
+                    strokeOpacity="0.4"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
                     transition={{ duration: 0.6, delay: 0.1 }}
                   />
                   <motion.line
-                    x1="80" y1="80" x2="25" y2="100"
-                    stroke="#f59e0b" strokeWidth="1.5" strokeOpacity="0.4"
-                    initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
+                    x1="80"
+                    y1="80"
+                    x2="25"
+                    y2="100"
+                    stroke="#f59e0b"
+                    strokeWidth="1.5"
+                    strokeOpacity="0.4"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
                     transition={{ duration: 0.6, delay: 0.2 }}
                   />
                   <motion.line
-                    x1="80" y1="80" x2="120" y2="130"
-                    stroke="#22d3ee" strokeWidth="1.5" strokeOpacity="0.5"
-                    initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
+                    x1="80"
+                    y1="80"
+                    x2="120"
+                    y2="130"
+                    stroke="#22d3ee"
+                    strokeWidth="1.5"
+                    strokeOpacity="0.5"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
                     transition={{ duration: 0.6, delay: 0.15 }}
                   />
                   <motion.line
-                    x1="80" y1="80" x2="40" y2="35"
-                    stroke="#22d3ee" strokeWidth="1.5" strokeOpacity="0.3"
-                    initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
+                    x1="80"
+                    y1="80"
+                    x2="40"
+                    y2="35"
+                    stroke="#22d3ee"
+                    strokeWidth="1.5"
+                    strokeOpacity="0.3"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
                     transition={{ duration: 0.6, delay: 0.25 }}
                   />
                 </>
@@ -132,33 +156,42 @@ export default function OnboardingPage() {
               {awakeningStep >= 2 && (
                 <>
                   <motion.line
-                    x1="25" y1="100" x2="120" y2="130"
-                    stroke="#f59e0b" strokeWidth="0.8" strokeOpacity="0.2"
-                    initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
+                    x1="25"
+                    y1="100"
+                    x2="120"
+                    y2="130"
+                    stroke="#f59e0b"
+                    strokeWidth="0.8"
+                    strokeOpacity="0.2"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
                     transition={{ duration: 0.5, delay: 0.1 }}
                   />
                   <motion.line
-                    x1="135" y1="60" x2="40" y2="35"
-                    stroke="#22d3ee" strokeWidth="0.8" strokeOpacity="0.2"
-                    initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
+                    x1="135"
+                    y1="60"
+                    x2="40"
+                    y2="35"
+                    stroke="#22d3ee"
+                    strokeWidth="0.8"
+                    strokeOpacity="0.2"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
                     transition={{ duration: 0.5, delay: 0.2 }}
                   />
                 </>
               )}
 
-              {awakeningStep >= 3 && (
-                <>
-                  {[0, 1, 2, 3, 4, 5].map((i) => (
-                    <circle key={i} r="2" fill="#f59e0b" opacity="0.6">
-                      <animateMotion
-                        dur="2s"
-                        repeatCount="indefinite"
-                        path={`M${80} ${80} L${[80, 135, 25, 120, 40][i] || 80} ${[25, 60, 100, 130, 35][i] || 80}`}
-                      />
-                    </circle>
-                  ))}
-                </>
-              )}
+              {awakeningStep >= 3 &&
+                [0, 1, 2, 3, 4, 5].map((i) => (
+                  <circle key={i} r="2" fill="#f59e0b" opacity="0.6">
+                    <animateMotion
+                      dur="2s"
+                      repeatCount="indefinite"
+                      path={`M${80} ${80} L${[80, 135, 25, 120, 40][i] || 80} ${[25, 60, 100, 130, 35][i] || 80}`}
+                    />
+                  </circle>
+                ))}
             </svg>
 
             <motion.p
@@ -167,9 +200,7 @@ export default function OnboardingPage() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
             >
-              {awakeningStep < 3
-                ? "Initializing neural network..."
-                : "Initializing Memory Core..."}
+              {awakeningStep < 3 ? "Initializing neural network..." : "Initializing Memory Core..."}
             </motion.p>
           </motion.div>
         )}
@@ -221,9 +252,15 @@ export default function OnboardingPage() {
                 onChange={(e) => setRole(e.target.value)}
                 className="h-12 w-full rounded-lg border border-white/10 bg-white/5 px-4 text-sm text-white transition-all duration-200 focus:border-amber-500/50 focus:outline-none focus:ring-1 focus:ring-amber-500/20"
               >
-                <option value="individual" className="bg-black">Individual</option>
-                <option value="team" className="bg-black">Team</option>
-                <option value="organization" className="bg-black">Organization</option>
+                <option value="individual" className="bg-black">
+                  Individual
+                </option>
+                <option value="team" className="bg-black">
+                  Team
+                </option>
+                <option value="organization" className="bg-black">
+                  Organization
+                </option>
               </select>
 
               <input
@@ -290,7 +327,7 @@ export default function OnboardingPage() {
             <motion.div
               className="mb-6 h-24 w-24 rounded-full bg-gradient-to-br from-amber-400 to-amber-600"
               animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 1, repeat: Infinity }}
+              transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY }}
             />
             <h2 className="text-2xl font-bold text-white">Memory Core Initialized</h2>
             <p className="mt-2 text-sm text-white/30">Entering your artificial brain...</p>

@@ -1,10 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { useFrame } from "@react-three/fiber";
-import { Text } from "@react-three/drei";
-import * as THREE from "three";
 import type { MemoryDetail } from "@memex/types";
+import { Text } from "@react-three/drei";
+import { useFrame } from "@react-three/fiber";
+import React, { useRef, useState, useMemo } from "react";
+import * as THREE from "three";
 
 const TYPE_COLORS: Record<string, string> = {
   text: "#f59e0b",
@@ -28,12 +28,22 @@ interface MemoryNodeProps {
   onSelect: (id: string) => void;
 }
 
-export function MemoryNode({ memory, position, isSelected, onSelect }: MemoryNodeProps) {
+const colorMap = new Map(Object.entries(TYPE_COLORS));
+
+export const MemoryNode = React.memo(function MemoryNode({
+  memory,
+  position,
+  isSelected,
+  onSelect,
+}: MemoryNodeProps) {
   const meshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
 
-  const color = TYPE_COLORS[memory.memory_type] || TYPE_COLORS.default;
-  const size = Math.max(0.3, Math.min(1.5, memory.importance * 1.5));
+  const color = colorMap.get(memory.memory_type) || colorMap.get("default") || "#6b7280";
+  const size = useMemo(
+    () => Math.max(0.3, Math.min(1.5, memory.importance * 1.5)),
+    [memory.importance],
+  );
 
   useFrame((state) => {
     if (!meshRef.current) return;
@@ -45,6 +55,7 @@ export function MemoryNode({ memory, position, isSelected, onSelect }: MemoryNod
 
   return (
     <group position={position}>
+      {/* biome-ignore lint/a11y/useKeyWithClickEvents: R3F mesh uses pointer events */}
       <mesh
         ref={meshRef}
         onClick={(e) => {
@@ -84,4 +95,4 @@ export function MemoryNode({ memory, position, isSelected, onSelect }: MemoryNod
       )}
     </group>
   );
-}
+});

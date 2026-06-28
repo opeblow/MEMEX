@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { Send, Loader2, ChevronDown, ChevronRight, Brain, Sparkles } from "lucide-react";
-import type { Explanation, ChatMessage } from "@memex/types";
 import { useStreamReason } from "@/hooks/use-reasoning";
+import type { ChatMessage, Explanation } from "@memex/types";
+import { Brain, ChevronDown, ChevronRight, Loader2, Send, Sparkles } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
 
 interface AIChatProps {
   projectId: string;
@@ -25,6 +25,7 @@ function ReasoningPanel({ explanation }: { explanation: Explanation }) {
   return (
     <div className="mt-2 border border-white/10 rounded-lg overflow-hidden">
       <button
+        type="button"
         onClick={() => setExpanded(!expanded)}
         className="flex items-center gap-2 w-full px-3 py-2 text-xs text-white/50 hover:text-white/80 bg-white/5 hover:bg-white/10 transition-colors"
       >
@@ -32,9 +33,7 @@ function ReasoningPanel({ explanation }: { explanation: Explanation }) {
         <Brain size={12} />
         Reasoning
         {explanation.confidence && (
-          <span className="ml-auto text-white/30">
-            Confidence: {explanation.confidence.label}
-          </span>
+          <span className="ml-auto text-white/30">Confidence: {explanation.confidence.label}</span>
         )}
       </button>
       {expanded && (
@@ -58,8 +57,11 @@ function ReasoningPanel({ explanation }: { explanation: Explanation }) {
             <div>
               <p className="text-white/30 mb-1">Relationships:</p>
               <div className="flex flex-wrap gap-1">
-                {explanation.relationship_paths.slice(0, 3).map((r, i) => (
-                  <span key={i} className="px-2 py-0.5 rounded bg-white/5 text-white/50">
+                {explanation.relationship_paths.slice(0, 3).map((r) => (
+                  <span
+                    key={`${r.from_entity}-${r.to_entity}`}
+                    className="px-2 py-0.5 rounded bg-white/5 text-white/50"
+                  >
                     {r.from_entity} → {r.to_entity}
                   </span>
                 ))}
@@ -70,7 +72,10 @@ function ReasoningPanel({ explanation }: { explanation: Explanation }) {
             <div className="flex flex-wrap gap-2 mt-1">
               <EvidenceChip label="Sources" score={explanation.confidence.factors.source_count} />
               <EvidenceChip label="Recency" score={explanation.confidence.factors.recency_score} />
-              <EvidenceChip label="Agreement" score={explanation.confidence.factors.agreement_score} />
+              <EvidenceChip
+                label="Agreement"
+                score={explanation.confidence.factors.agreement_score}
+              />
             </div>
           )}
         </div>
@@ -79,13 +84,14 @@ function ReasoningPanel({ explanation }: { explanation: Explanation }) {
   );
 }
 
-export function AIChat({ projectId }: AIChatProps) {
+export const AIChat = React.memo(function AIChat({ projectId }: AIChatProps) {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const { streamReason, answer, steps, isStreaming, isComplete, explanation } = useStreamReason();
   const inputRef = useRef<HTMLInputElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-run when messages or answer updates
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, answer]);
@@ -144,28 +150,37 @@ export function AIChat({ projectId }: AIChatProps) {
         <span className="text-sm text-white/80">MEMEX Reasoning</span>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div
+        className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4"
+        role="log"
+        aria-label="Chat conversation"
+      >
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-white/20 space-y-2">
             <Brain size={48} className="text-white/10" />
             <p className="text-sm">Ask a question to start reasoning</p>
-            <p className="text-xs">MEMEX will search memories, find relationships, and explain its reasoning</p>
+            <p className="text-xs">
+              MEMEX will search memories, find relationships, and explain its reasoning
+            </p>
           </div>
         )}
         {messages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+          <div
+            key={msg.id}
+            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+          >
             <div
-              className={`max-w-[80%] rounded-lg p-3 ${
+              className={`max-w-[90%] md:max-w-[80%] rounded-lg p-3 ${
                 msg.role === "user"
                   ? "bg-purple-500/20 border border-purple-500/30"
                   : "bg-white/5 border border-white/10"
               }`}
             >
               {msg.role === "assistant" && msg.content === "" && isStreaming ? (
-                <div className="flex items-center gap-2 text-white/40">
+                <output className="flex items-center gap-2 text-white/40" aria-live="polite">
                   <Loader2 size={14} className="animate-spin" />
                   {steps.map((s) => s.name).join(" → ") || "Thinking..."}
-                </div>
+                </output>
               ) : (
                 <>
                   <p className="text-sm text-white/80 whitespace-pre-wrap">{msg.content}</p>
@@ -178,8 +193,8 @@ export function AIChat({ projectId }: AIChatProps) {
         <div ref={endRef} />
       </div>
 
-      <form onSubmit={handleSubmit} className="p-4 border-t border-white/10">
-        <div className="flex items-center gap-2">
+      <form onSubmit={handleSubmit} className="p-4 md:p-6 border-t border-white/10">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
           <input
             ref={inputRef}
             type="text"
@@ -187,11 +202,13 @@ export function AIChat({ projectId }: AIChatProps) {
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask a question about your memories..."
             disabled={isStreaming}
+            aria-label="Message input"
             className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 placeholder-white/30 focus:outline-none focus:border-purple-500/50 disabled:opacity-50"
           />
           <button
             type="submit"
             disabled={!input.trim() || isStreaming}
+            aria-label="Send message"
             className="p-2 bg-purple-500/20 border border-purple-500/30 rounded-lg text-purple-400 hover:bg-purple-500/30 transition-colors disabled:opacity-30"
           >
             {isStreaming ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
@@ -200,4 +217,4 @@ export function AIChat({ projectId }: AIChatProps) {
       </form>
     </div>
   );
-}
+});

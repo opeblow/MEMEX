@@ -21,6 +21,7 @@ interface RequestConfig {
 class ApiClient {
   private baseUrl: string;
   private refreshPromise: Promise<boolean> | null = null;
+  private maxRetries = 3;
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
@@ -77,14 +78,28 @@ class ApiClient {
     return this.refreshPromise;
   }
 
-  async request<T>(path: string, config: RequestConfig = {}): Promise<T> {
+  private logError(method: string, path: string, error: unknown) {
+    if (typeof console !== "undefined") {
+      console.error(`[API] ${method} ${path} failed:`, error);
+    }
+  }
+
+  private async sleep(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  private shouldRetry(status: number): boolean {
+    return status === 429 || status >= 500;
+  }
+
+  async request<T>(path: string, config: RequestConfig = {}, retryCount = 0): Promise<T> {
     const { access } = this.getTokens();
     const headers: Record<string, string> = {
       ...config.headers,
     };
 
     if (access) {
-      headers["Authorization"] = `Bearer ${access}`;
+      headers.Authorization = `Bearer ${access}`;
     }
 
     if (config.body && !(config.body instanceof FormData)) {
@@ -103,11 +118,12 @@ class ApiClient {
       const res = await fetch(`${this.baseUrl}${path}`, {
         method: config.method ?? "GET",
         headers,
-        body: config.body instanceof FormData
-          ? config.body
-          : config.body
-            ? JSON.stringify(config.body)
-            : undefined,
+        body:
+          config.body instanceof FormData
+            ? config.body
+            : config.body
+              ? JSON.stringify(config.body)
+              : undefined,
         signal,
       });
 
@@ -116,11 +132,22 @@ class ApiClient {
       if (res.status === 401 && this.getTokens().refresh) {
         const refreshed = await this.refreshTokens();
         if (refreshed) {
-          return this.request<T>(path, config);
+          return this.request<T>(path, config, retryCount);
         }
       }
 
       if (!res.ok) {
+        if (this.shouldRetry(res.status) && retryCount < this.maxRetries) {
+          const delay = Math.min(1000 * 2 ** retryCount, 10000);
+          this.logError(
+            config.method ?? "GET",
+            path,
+            `Retry ${retryCount + 1}/${this.maxRetries} after ${delay}ms (status ${res.status})`,
+          );
+          await this.sleep(delay);
+          return this.request<T>(path, config, retryCount + 1);
+        }
+
         const error = await res.json().catch(() => ({
           error: { code: "UNKNOWN", message: res.statusText },
         }));
@@ -141,6 +168,20 @@ class ApiClient {
     } catch (error) {
       clearTimeout(timeoutId);
       if (error instanceof ApiError) throw error;
+      if (
+        retryCount < this.maxRetries &&
+        !(error instanceof DOMException && error.name === "AbortError")
+      ) {
+        const delay = Math.min(1000 * 2 ** retryCount, 10000);
+        this.logError(
+          config.method ?? "GET",
+          path,
+          `Network retry ${retryCount + 1}/${this.maxRetries} after ${delay}ms`,
+        );
+        await this.sleep(delay);
+        return this.request<T>(path, config, retryCount + 1);
+      }
+      this.logError(config.method ?? "GET", path, error);
       throw new ApiError(
         0,
         "NETWORK_ERROR",
@@ -171,7 +212,7 @@ class ApiClient {
       "Content-Type": "application/json",
     };
     if (access) {
-      headers["Authorization"] = `Bearer ${access}`;
+      headers.Authorization = `Bearer ${access}`;
     }
 
     return fetch(`${this.baseUrl}${path}`, {
@@ -199,8 +240,10 @@ function anySignal(signals: AbortSignal[]): AbortSignal {
   return controller.signal;
 }
 
-const apiUrl = (typeof window !== "undefined"
-  ? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
-  : process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000") as string;
+const apiUrl = (
+  typeof window !== "undefined"
+    ? (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000")
+    : (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000")
+) as string;
 
 export const api = new ApiClient(apiUrl);

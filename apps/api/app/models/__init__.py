@@ -1,4 +1,13 @@
 from app.models.agent import Agent, AgentObservabilityEvent, AgentWorkflow, Decision, TaskExecution
+from app.models.collaboration import (
+    AuditLog,
+    Comment,
+    Invitation,
+    MemoryCollection,
+    MemoryCollectionItem,
+    MemoryPermission,
+    ShareLink,
+)
 from app.models.entity import Entity, Relationship
 from app.models.memory import Memory
 from app.models.memory_event import MemoryEvent
@@ -31,4 +40,11 @@ __all__ = [
     "TaskExecution",
     "Decision",
     "AgentObservabilityEvent",
+    "MemoryCollection",
+    "MemoryCollectionItem",
+    "Comment",
+    "MemoryPermission",
+    "ShareLink",
+    "Invitation",
+    "AuditLog",
 ]

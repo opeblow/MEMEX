@@ -6,6 +6,8 @@ from app.api.v1 import (
     agents,
     analytics,
     auth,
+    collaboration,
+    demo,
     entities,
     graph,
     imports,
@@ -31,3 +33,5 @@ api_router.include_router(reasoning.router, prefix="", tags=["reasoning"])
 api_router.include_router(entities.router, prefix="", tags=["entities"])
 api_router.include_router(imports.router, prefix="", tags=["imports"])
 api_router.include_router(agents.router, prefix="", tags=["agents"])
+api_router.include_router(collaboration.router, prefix="", tags=["collaboration"])
+api_router.include_router(demo.router, prefix="", tags=["demo"])

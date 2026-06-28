@@ -1,5 +1,5 @@
-import { create } from "zustand";
 import type { User } from "@memex/types";
+import { create } from "zustand";
 import * as auth from "../auth";
 
 interface AuthState {
@@ -17,8 +17,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   isLoading: true,
   isAuthenticated: false,
 
-  setUser: (user) =>
-    set({ user, isAuthenticated: !!user, isLoading: false }),
+  setUser: (user) => set({ user, isAuthenticated: !!user, isLoading: false }),
 
   login: async (token: string) => {
     set({ isLoading: true });
@@ -45,10 +44,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   checkAuth: async () => {
     set({ isLoading: true });
-    const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("memex_access_token")
-        : null;
+    const token = typeof window !== "undefined" ? localStorage.getItem("memex_access_token") : null;
 
     if (!token) {
       set({ user: null, isAuthenticated: false, isLoading: false });

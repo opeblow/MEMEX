@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
+const withBundleAnalyzer = require("@next/bundle-analyzer")({
+  enabled: process.env.ANALYZE === "true",
+});
+
+const nextConfig: NextConfig = withBundleAnalyzer({
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
@@ -15,12 +19,7 @@ const nextConfig: NextConfig = {
   ],
 
   experimental: {
-    optimizePackageImports: [
-      "lucide-react",
-      "framer-motion",
-      "@tanstack/react-query",
-      "@memex/ui",
-    ],
+    optimizePackageImports: ["lucide-react", "framer-motion", "@tanstack/react-query", "@memex/ui"],
   },
 
   images: {
@@ -40,11 +39,9 @@ const nextConfig: NextConfig = {
     },
     {
       source: "/fonts/(.*)",
-      headers: [
-        { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
-      ],
+      headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
     },
   ],
-};
+});
 
 export default nextConfig;

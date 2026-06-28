@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import Link from "next/link";
+import { requestPasswordReset, resetPassword } from "@/lib/auth";
 import { motion } from "framer-motion";
-import { resetPassword, requestPasswordReset } from "@/lib/auth";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
 
 export default function ResetPasswordPage() {
   const searchParams = useSearchParams();
@@ -56,24 +56,31 @@ export default function ResetPasswordPage() {
       >
         <div className="mb-6 h-14 w-14 rounded-full bg-cyan-500/20">
           <div className="flex h-full w-full items-center justify-center text-cyan-400">
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
+            <svg
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={1.5}
+            >
+              <title>Lock icon</title>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z"
+              />
             </svg>
           </div>
         </div>
 
         {!token ? (
           <>
-            <h1 className="mb-2 text-center text-xl font-bold text-white">
-              Reset your password
-            </h1>
+            <h1 className="mb-2 text-center text-xl font-bold text-white">Reset your password</h1>
             <p className="mb-8 text-center text-sm text-white/30">
               Enter your email and we'll send you a reset link
             </p>
             {sent ? (
-              <p className="text-sm text-green-400/80">
-                Check your email for the reset link
-              </p>
+              <p className="text-sm text-green-400/80">Check your email for the reset link</p>
             ) : (
               <form onSubmit={handleRequestReset} className="flex w-full flex-col gap-4">
                 <input
@@ -97,12 +104,8 @@ export default function ResetPasswordPage() {
           </>
         ) : (
           <>
-            <h1 className="mb-2 text-center text-xl font-bold text-white">
-              New password
-            </h1>
-            <p className="mb-8 text-center text-sm text-white/30">
-              Enter your new password
-            </p>
+            <h1 className="mb-2 text-center text-xl font-bold text-white">New password</h1>
+            <p className="mb-8 text-center text-sm text-white/30">Enter your new password</p>
             <form onSubmit={handleResetPassword} className="flex w-full flex-col gap-4">
               <input
                 type="password"
@@ -125,10 +128,7 @@ export default function ResetPasswordPage() {
           </>
         )}
 
-        <Link
-          href="/login"
-          className="mt-6 text-xs text-white/30 hover:text-white/60"
-        >
+        <Link href="/login" className="mt-6 text-xs text-white/30 hover:text-white/60">
           Back to login
         </Link>
       </motion.div>

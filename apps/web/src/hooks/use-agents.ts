@@ -1,31 +1,30 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import type {
   Agent,
-  AgentListResponse,
   AgentCreateRequest,
+  AgentListResponse,
   AgentUpdateRequest,
-  Workflow,
-  WorkflowListResponse,
-  WorkflowCreateRequest,
-  WorkflowUpdateRequest,
-  TaskExecutionListResponse,
   Decision,
-  DecisionListResponse,
   DecisionCreateRequest,
-  ObservabilityEvent,
-  ObservabilityEventListResponse,
+  DecisionListResponse,
   HandoffRequest,
   HandoffResponse,
+  ObservabilityEvent,
+  ObservabilityEventListResponse,
+  TaskExecutionListResponse,
+  Workflow,
+  WorkflowCreateRequest,
+  WorkflowListResponse,
+  WorkflowUpdateRequest,
 } from "@memex/types";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export function useAgents(projectId: string) {
   return useQuery({
     queryKey: ["agents", projectId],
-    queryFn: () =>
-      api.get<AgentListResponse>(`/api/v1/memex/agents?project_id=${projectId}`),
+    queryFn: () => api.get<AgentListResponse>(`/api/v1/memex/agents?project_id=${projectId}`),
     enabled: !!projectId,
   });
 }
@@ -78,8 +77,7 @@ export function useDeleteAgent() {
 export function useWorkflows(projectId: string) {
   return useQuery({
     queryKey: ["workflows", projectId],
-    queryFn: () =>
-      api.get<WorkflowListResponse>(`/api/v1/memex/workflows?project_id=${projectId}`),
+    queryFn: () => api.get<WorkflowListResponse>(`/api/v1/memex/workflows?project_id=${projectId}`),
     enabled: !!projectId,
   });
 }
@@ -107,7 +105,10 @@ export function useCreateWorkflow() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ projectId, ...data }: WorkflowCreateRequest & { projectId: string }) => {
-      return api.post<Workflow>(`/api/v1/memex/agents/${data.agent_id}/workflows?project_id=${projectId}`, data);
+      return api.post<Workflow>(
+        `/api/v1/memex/agents/${data.agent_id}/workflows?project_id=${projectId}`,
+        data,
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["workflows"] });
@@ -132,9 +133,7 @@ export function useAgentTasks(agentId: string | null, limit = 20) {
   return useQuery({
     queryKey: ["agentTasks", agentId, limit],
     queryFn: () =>
-      api.get<TaskExecutionListResponse>(
-        `/api/v1/memex/agents/${agentId}/tasks?limit=${limit}`,
-      ),
+      api.get<TaskExecutionListResponse>(`/api/v1/memex/agents/${agentId}/tasks?limit=${limit}`),
     enabled: !!agentId,
   });
 }
@@ -152,9 +151,7 @@ export function useAgentDecisions(agentId: string | null, limit = 20) {
   return useQuery({
     queryKey: ["agentDecisions", agentId, limit],
     queryFn: () =>
-      api.get<DecisionListResponse>(
-        `/api/v1/memex/agents/${agentId}/decisions?limit=${limit}`,
-      ),
+      api.get<DecisionListResponse>(`/api/v1/memex/agents/${agentId}/decisions?limit=${limit}`),
     enabled: !!agentId,
   });
 }
@@ -162,8 +159,7 @@ export function useAgentDecisions(agentId: string | null, limit = 20) {
 export function useWorkflowDecisions(workflowId: string | null) {
   return useQuery({
     queryKey: ["workflowDecisions", workflowId],
-    queryFn: () =>
-      api.get<DecisionListResponse>(`/api/v1/memex/workflows/${workflowId}/decisions`),
+    queryFn: () => api.get<DecisionListResponse>(`/api/v1/memex/workflows/${workflowId}/decisions`),
     enabled: !!workflowId,
   });
 }
@@ -198,8 +194,24 @@ export function useObservabilityEvents(projectId: string, agentId?: string, even
 export function useRecordObservabilityEvent() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ projectId, ...data }: { projectId: string; agent_id?: string; workflow_id?: string; task_id?: string; event_type: string; event_name: string; data?: Record<string, unknown>; duration_ms?: number; level?: string }) => {
-      return api.post<ObservabilityEvent>(`/api/v1/memex/observability/events?project_id=${projectId}`, data);
+    mutationFn: async ({
+      projectId,
+      ...data
+    }: {
+      projectId: string;
+      agent_id?: string;
+      workflow_id?: string;
+      task_id?: string;
+      event_type: string;
+      event_name: string;
+      data?: Record<string, unknown>;
+      duration_ms?: number;
+      level?: string;
+    }) => {
+      return api.post<ObservabilityEvent>(
+        `/api/v1/memex/observability/events?project_id=${projectId}`,
+        data,
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["observabilityEvents"] });
@@ -211,7 +223,10 @@ export function useHandoff() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ projectId, ...data }: HandoffRequest & { projectId: string }) => {
-      return api.post<HandoffResponse>(`/api/v1/memex/agents/handoff?project_id=${projectId}`, data);
+      return api.post<HandoffResponse>(
+        `/api/v1/memex/agents/handoff?project_id=${projectId}`,
+        data,
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["workflows"] });

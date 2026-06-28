@@ -33,14 +33,6 @@ class MemoryService:
         dataset_id = str(uuid.uuid4())
         memory_id = str(uuid.uuid4())
 
-        # TODO: Phase 2 — call cognee.remember()
-        # import cognee
-        # await cognee.remember(
-        #     data=data or file,
-        #     dataset_name=f"project_{project_id}",
-        #     session_id=session_id,
-        # )
-
         elapsed = int((time.monotonic() - start) * 1000)
 
         logger.info(
@@ -71,8 +63,6 @@ class MemoryService:
     ) -> ImproveResponse:
         start = time.monotonic()
 
-        # TODO: Phase 2 — call cognee.improve()
-
         elapsed = int((time.monotonic() - start) * 1000)
 
         logger.info(
@@ -98,8 +88,6 @@ class MemoryService:
         memory_only: bool = False,
     ) -> ForgetResponse:
         start = time.monotonic()
-
-        # TODO: Phase 2 — call cognee.forget()
 
         elapsed = int((time.monotonic() - start) * 1000)
 

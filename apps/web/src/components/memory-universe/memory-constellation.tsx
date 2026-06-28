@@ -1,9 +1,9 @@
 "use client";
 
+import type { MemoryDetail } from "@memex/types";
 import { useMemo } from "react";
 import { MemoryNode } from "./memory-node";
 import { RelationshipLine } from "./relationship-line";
-import type { MemoryDetail } from "@memex/types";
 
 interface ConstellationProps {
   memories: MemoryDetail[];
@@ -45,7 +45,8 @@ export function MemoryConstellation({ memories, selectedId, onSelect }: Constell
       })}
       {memories.map((mem, i) => {
         const start = positions.get(mem.id);
-        const nextMem = memories[(i + 1) % memories.length]!;
+        const nextMem = memories[(i + 1) % memories.length];
+        if (!nextMem) return null;
         const next = positions.get(nextMem.id);
         if (!start || !next) return null;
         return (

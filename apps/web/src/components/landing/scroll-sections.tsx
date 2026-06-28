@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
 import { useReducedMotion } from "@memex/hooks";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { useRef } from "react";
 
 interface SectionProps {
   title: string;
@@ -24,11 +24,7 @@ function StorySection({ title, subtitle, body, index, accentColor }: SectionProp
   const opacity = useTransform(scrollYProgress, [0, 0.3, 0.6, 1], [0, 1, 1, 0]);
   const y = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [80, 0, 0, -40]);
   const scale = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0.92, 1, 1, 0.97]);
-  const clipIn = useTransform(
-    scrollYProgress,
-    [0, 0.25],
-    ["inset(0 0 100% 0)", "inset(0 0 0% 0)"],
-  );
+  const clipIn = useTransform(scrollYProgress, [0, 0.25], ["inset(0 0 100% 0)", "inset(0 0 0% 0)"]);
 
   const isEven = index % 2 === 0;
 
@@ -39,21 +35,16 @@ function StorySection({ title, subtitle, body, index, accentColor }: SectionProp
       style={reducedMotion ? {} : { opacity, y: reducedMotion ? 0 : y, scale }}
     >
       <div className="relative w-full max-w-6xl mx-auto">
-        <motion.div
-          className="mx-auto max-w-3xl"
-          style={reducedMotion ? {} : { clipPath: clipIn }}
-        >
+        <motion.div className="mx-auto max-w-3xl" style={reducedMotion ? {} : { clipPath: clipIn }}>
           <motion.p
             className="mb-4 text-xs font-semibold tracking-[0.3em] uppercase"
             style={{ color: accentColor }}
           >
             {subtitle}
           </motion.p>
-          <h2
-            className="mb-6 text-4xl font-bold leading-tight tracking-tight md:text-6xl lg:text-7xl"
-          >
-            {title.split(" ").map((word, i) => (
-              <span key={i}>
+          <h2 className="mb-6 text-4xl font-bold leading-tight tracking-tight md:text-6xl lg:text-7xl">
+            {title.split(" ").map((word) => (
+              <span key={word}>
                 <span
                   className="bg-clip-text text-transparent"
                   style={{
@@ -112,7 +103,7 @@ export function ScrollSections() {
   return (
     <>
       {SECTIONS.map((section, index) => (
-        <StorySection key={index} {...section} index={index} />
+        <StorySection key={section.title} {...section} index={index} />
       ))}
 
       <section className="relative z-10 flex min-h-dvh items-center justify-center overflow-hidden px-6">
@@ -144,8 +135,8 @@ export function ScrollSections() {
             viewport={{ once: true }}
             transition={{ delay: 0.3, duration: 0.6 }}
           >
-            Your artificial memory is waiting. Start preserving, connecting, and discovering
-            like never before.
+            Your artificial memory is waiting. Start preserving, connecting, and discovering like
+            never before.
           </motion.p>
           <motion.div
             className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center"
@@ -162,8 +153,21 @@ export function ScrollSections() {
               <span className="absolute inset-[1px] rounded-[7px] bg-black transition-all duration-300 group-hover:bg-black/80" />
               <span className="relative z-10 flex items-center gap-2 text-white">
                 Enter MEMEX
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="transition-transform duration-300 group-hover:translate-x-1">
-                  <path d="M1 8H15M15 8L8 1M15 8L8 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  className="transition-transform duration-300 group-hover:translate-x-1"
+                >
+                  <title>Arrow icon</title>
+                  <path
+                    d="M1 8H15M15 8L8 1M15 8L8 15"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               </span>
             </a>

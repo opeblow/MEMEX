@@ -1,18 +1,13 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
-import type {
-  MemoryDetail,
-  SearchRequest,
-  SearchResponse,
-} from "@memex/types";
+import type { MemoryDetail, SearchRequest, SearchResponse } from "@memex/types";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export function useMemory(memoryId: string | null) {
   return useQuery({
     queryKey: ["memory", memoryId],
-    queryFn: () =>
-      api.get<MemoryDetail>(`/api/v1/memex/memory/${memoryId}`),
+    queryFn: () => api.get<MemoryDetail>(`/api/v1/memex/memory/${memoryId}`),
     enabled: !!memoryId,
   });
 }
@@ -35,9 +30,9 @@ export function useSearchMemories() {
       return api.post<SearchResponse>("/api/v1/memex/memory/search", params);
     },
     onSuccess: (data) => {
-      (data.results || []).forEach((mem) => {
+      for (const mem of data.results || []) {
         queryClient.setQueryData(["memory", mem.id], mem);
-      });
+      }
     },
   });
 }
@@ -66,9 +61,7 @@ export function useArchiveMemory() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (memoryId: string) => {
-      return api.post<{ status: string }>(
-        `/api/v1/memex/memory/${memoryId}/archive`,
-      );
+      return api.post<{ status: string }>(`/api/v1/memex/memory/${memoryId}/archive`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["memories"] });
@@ -80,9 +73,7 @@ export function useRestoreMemory() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (memoryId: string) => {
-      return api.post<{ status: string }>(
-        `/api/v1/memex/memory/${memoryId}/restore`,
-      );
+      return api.post<{ status: string }>(`/api/v1/memex/memory/${memoryId}/restore`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["memories"] });
@@ -102,10 +93,7 @@ export function useUpdateMemory() {
       tags?: string[];
       importance?: number;
     }) => {
-      return api.patch<MemoryDetail>(
-        `/api/v1/memex/memory/${memoryId}`,
-        data,
-      );
+      return api.patch<MemoryDetail>(`/api/v1/memex/memory/${memoryId}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["memories"] });

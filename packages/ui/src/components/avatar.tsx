@@ -1,7 +1,7 @@
 "use client";
 
-import { forwardRef, type ComponentPropsWithoutRef, type ElementRef } from "react";
 import * as AvatarPrimitive from "@radix-ui/react-avatar";
+import { type ComponentPropsWithoutRef, type ElementRef, forwardRef } from "react";
 import { cn } from "../lib/cn";
 
 const Avatar = forwardRef<
@@ -10,10 +10,7 @@ const Avatar = forwardRef<
 >(({ className, ...props }, ref) => (
   <AvatarPrimitive.Root
     ref={ref}
-    className={cn(
-      "relative flex h-9 w-9 shrink-0 overflow-hidden rounded-full",
-      className,
-    )}
+    className={cn("relative flex h-9 w-9 shrink-0 overflow-hidden rounded-full", className)}
     {...props}
   />
 ));
